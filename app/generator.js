@@ -42,6 +42,10 @@
     credentials: "",
     languages: "",
     voice: "warm",
+    serviceLayout: "alternate",
+    servicesIndex: "grid",
+    home: { ticker: true, manifesto: true, stats: true, usps: true, bento: true, services: true, about: true, process: true, beforeAfter: true, reviews: true, quiz: true, gallery: true, areas: true, faq: true, contact: true, parallax: true, team: false, blog: false },
+    security: { csp: true, honeypot: true, timetrap: true, securityTxt: true, noindexForms: false, hideEmail: true, headersFile: true },
     headlines: { hero: "", services: "", about: "", process: "", reviews: "", cta: "" },
     services: [],
     areas: [],
@@ -79,7 +83,7 @@
   function normalize(p) {
     p = merge(DEFAULT, p || {});
     p.services = (p.services || []).filter(s => s && s.name).map((s, i) => ({
-      ...s, slug: s.slug || slug(s.name), image: s.image || "", bullets: s.bullets || "", faqs: s.faqs || "", id: i
+      ...s, slug: s.slug || slug(s.name), image: s.image || "", gallery: Array.isArray(s.gallery) ? s.gallery : [], variant: s.variant || "", bullets: s.bullets || "", faqs: s.faqs || "", id: i
     }));
     p.areas = (p.areas || []).filter(a => a && a.name).map(a => ({ ...a, slug: a.slug || slug(a.name) }));
     p.posts = (p.posts || []).filter(x => x && x.title).map(x => ({ ...x, slug: x.slug || slug(x.title) }));
@@ -266,7 +270,7 @@ ${dock}
       ${logoTag(p, pg, "ft-logo")}
       <p>${esc(b.tagline || b.description.slice(0, 160))}</p>
       <address>${esc(b.address.street)}<br>${esc([b.address.city, b.address.state].filter(Boolean).join(", "))} ${esc(b.address.zip)}</address>
-      ${b.phone ? `<a href="${telHref(b.phone)}">${esc(b.phone)}</a><br>` : ""}${b.email ? `<a href="mailto:${attr(b.email)}">${esc(b.email)}</a>` : ""}
+      ${b.phone ? `<a href="${telHref(b.phone)}">${esc(b.phone)}</a><br>` : ""}${b.email ? (p.security.hideEmail ? `<a href="#" data-em="${attr(b.email.split("").reverse().join(""))}">${esc(b.email.replace("@", " [at] "))}</a>` : `<a href="mailto:${attr(b.email)}">${esc(b.email)}</a>`) : ""}
       <p data-open-status class="open-status"></p>
       <div class="social">${social}</div>
     </div>
@@ -516,7 +520,7 @@ ${dock}
   <input type="hidden" name="_subject" value="${attr((isAppt ? "Appointment request" : "Contact") + " — " + p.business.name)}">
   <input type="hidden" name="_next" value="${attr((p.seo.siteUrl || "").replace(/\/+$/, "") + "/thank-you/")}">
   ${netlify ? `<input type="hidden" name="form-name" value="${kind}">` : ""}
-  <p class="hp"><label>Leave this field empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>
+  ${p.security.honeypot !== false ? `<p class="hp" aria-hidden="true"><label>Leave this field empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>` : ""}${p.security.timetrap !== false ? `<input type="hidden" name="_t" data-timetrap value="">` : ""}
   <div class="row2"><label class="fl"><input name="name" required autocomplete="name" placeholder=" "><span>Full name</span></label><label class="fl"><input name="phone" type="tel" required autocomplete="tel" placeholder=" "><span>Phone</span></label></div>
   <label class="fl"><input name="email" type="email" required autocomplete="email" placeholder=" "><span>Email</span></label>
   ${isAppt ? `<div class="row2"><label>Service<select name="service"><option value="">Select a service</option>${svcOpts}<option>Not sure yet</option></select></label><label>Preferred date<input name="date" type="date"></label></div>
@@ -561,12 +565,15 @@ ${dock}
       const cards = servicesGrid(p, pg, p.services.slice(0, 8), { hscroll: true, title: copy(p, "services", esc(city)) });
       const grid = servicesGrid(p, pg, p.services.slice(0, 9), { title: copy(p, "services", esc(city)) });
       const L = p.brand.layout || "cinematic", cta = ctaBand(p, pg, copy(p, "cta", city));
+      const hm = p.home || {}, on = (k, html) => hm[k] === false ? "" : html;
+      const teamSec = (hm.team && p.team.length) ? `<section class="team wrap">${eyebrow("Team")}<h2 data-split>Meet the team</h2><div class="team-grid" data-reveal="stagger">${p.team.slice(0, 4).map(t => `<article class="member" data-tilt>${t.image ? imgTag(p, pg, t.image, { sizes: "300px", alt: t.name }) : ""}<h3>${esc(t.name)}</h3><p class="role">${esc(t.role)}</p></article>`).join("")}</div><p><a class="link-arrow" href="${pg.rel}team/">Everyone on the team →</a></p></section>` : "";
+      const blogSec = (hm.blog && p.posts.length) ? `<section class="wrap post-list-home">${eyebrow("From the blog")}<h2 data-split>Advice worth reading</h2><div class="post-list" data-reveal="stagger">${p.posts.slice(0, 3).map(x => `<a class="post-card" data-tilt href="${pg.rel}blog/${x.slug}/"><time>${esc(x.date || "")}</time><h3>${esc(x.title)}</h3><p>${esc(x.excerpt || String(x.body || "").slice(0, 120))}</p></a>`).join("")}</div></section>` : "";
       const orders = {
-        cinematic: [H, tickerSection(p), manifesto, statsBand(p), uspSection(p, pg), bentoSection(p, pg), cards, parallaxBreak(p, pg, 5), about, process, beforeAfterSection(p, pg), reviewsSection(p, pg), quizSection(p, pg), gallery, areasList(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), contactBlock(p, pg), cta],
-        split: [H, statsBand(p), uspSection(p, pg), grid, about, parallaxBreak(p, pg, 6), reviewsSection(p, pg), beforeAfterSection(p, pg), bentoSection(p, pg), process, quizSection(p, pg), gallery, faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        editorial: [H, manifesto, hoverList, uspSection(p, pg), about, statsBand(p), parallaxBreak(p, pg, 7), reviewsSection(p, pg), beforeAfterSection(p, pg), process, quizSection(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        collage: [H, tickerSection(p), bentoSection(p, pg), cards, uspSection(p, pg), about, beforeAfterSection(p, pg), gallery, reviewsSection(p, pg), process, quizSection(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        bold: [H, statsBand(p), tickerSection(p), grid, uspSection(p, pg), bentoSection(p, pg), parallaxBreak(p, pg, 5), reviewsSection(p, pg), beforeAfterSection(p, pg), about, process, quizSection(p, pg), gallery, faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
+        cinematic: [H, on("ticker", tickerSection(p)), on("manifesto", manifesto), on("stats", statsBand(p)), on("usps", uspSection(p, pg)), on("bento", bentoSection(p, pg)), on("services", cards), on("parallax", parallaxBreak(p, pg, 5)), on("about", about), on("process", process), on("beforeAfter", beforeAfterSection(p, pg)), on("reviews", reviewsSection(p, pg)), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("areas", areasList(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        split: [H, on("stats", statsBand(p)), on("usps", uspSection(p, pg)), on("services", grid), on("about", about), on("parallax", parallaxBreak(p, pg, 6)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("bento", bentoSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        editorial: [H, on("manifesto", manifesto), on("services", hoverList), on("usps", uspSection(p, pg)), on("about", about), on("stats", statsBand(p)), on("parallax", parallaxBreak(p, pg, 7)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        collage: [H, on("ticker", tickerSection(p)), on("bento", bentoSection(p, pg)), on("services", cards), on("usps", uspSection(p, pg)), on("about", about), on("beforeAfter", beforeAfterSection(p, pg)), on("gallery", gallery), on("reviews", reviewsSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        bold: [H, on("stats", statsBand(p)), on("ticker", tickerSection(p)), on("services", grid), on("usps", uspSection(p, pg)), on("bento", bentoSection(p, pg)), on("parallax", parallaxBreak(p, pg, 5)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("about", about), on("process", process), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
       };
       return (orders[L] || orders.cinematic).join("\n");
     },
@@ -581,12 +588,17 @@ ${dock}
     },
     services(p, pg) {
       return [hero(p, pg, { eyebrowText: "Services", h1: `Everything we do in <em>${esc(p.business.address.city)}</em>`, lead: "Explore each service to learn what to expect, who it helps, and how to get started.", imgId: 2, small: true }),
-        crumbsHtml(p, pg), servicesGrid(p, pg, p.services, { title: "All services", eyebrow: `${p.services.length} ${words(p.services.length, "service")}` }),
+        crumbsHtml(p, pg), servicesIndex(p, pg),
         p.financing.enabled ? `<section class="note-band wrap" data-reveal><p>Flexible payment options are available. <a href="${pg.rel}financing/">See financing →</a></p></section>` : "",
         faqSection(p.faqs.slice(0, 5)), ctaBand(p, pg, "Not sure where to start? Ask us.")].join("\n");
     },
     service(p, pg) {
       const s = pg.service, b = p.business, city = pg.area ? pg.area.name : b.address.city;
+      const V = ["classic", "showcase", "steps", "editorial"];
+      const variant = (s.variant && V.includes(s.variant)) ? s.variant : (V.includes(p.serviceLayout) ? p.serviceLayout : V[s.id % 4]);
+      if (variant === "showcase") return serviceShowcase(p, pg);
+      if (variant === "steps") return serviceSteps(p, pg);
+      if (variant === "editorial") return serviceEditorial(p, pg);
       const bullets = lines(s.bullets), faqs = parseFaqs(s.faqs);
       const others = p.services.filter(x => x.slug !== s.slug).slice(0, 3);
       const kw = lines(String(s.keywords || "").replace(/,/g, "\n"));
@@ -601,9 +613,10 @@ ${dock}
     ${p.financing.enabled ? `<p>Flexible payment plans may be available — <a href="${pg.rel}financing/">see financing options</a>.</p>` : ""}
   </article>
   <aside class="svc-aside" data-reveal>
-    <div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/">Request Appointment</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>
+    <div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>
     ${others.length ? `<div class="aside-links"><h3>Related services</h3><ul>${others.map(o => `<li><a href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}">${esc(o.name)}</a></li>`).join("")}</ul></div>` : ""}
   </aside></div></section>`,
+        svcGallery(p, pg, s),
         pg.area ? "" : areasList(p, pg, s.slug),
         pg.area ? `<section class="wrap areas">${eyebrow("Also serving")}<ul class="chip-list" data-reveal="stagger">${p.areas.filter(a => a.slug !== pg.area.slug).slice(0, 12).map(a => `<li><a href="${pg.rel}services/${s.slug}/${a.slug}/">${esc(s.name)} in ${esc(a.name)}</a></li>`).join("")}<li><a href="${pg.rel}services/${s.slug}/">${esc(s.name)} in ${esc(b.address.city)}</a></li></ul></section>` : "",
         faqSection(faqs.length ? faqs : p.faqs.slice(0, 4), `${s.name}: common questions`),
@@ -693,6 +706,67 @@ ${dock}
         `<section class="wrap sitemap-sec"><div class="sitemap-grid" data-reveal="stagger">${Object.entries(groups).map(([g, xs]) => `<div><h2>${esc(g.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()))}</h2><ul>${xs.map(x => `<li><a href="${pg.rel}${x.url}">${esc(x.title.split("|")[0].trim())}</a></li>`).join("")}</ul></div>`).join("")}</div></section>`].join("\n");
     },
   };
+  function servicesIndex(p, pg) {
+    const st = p.servicesIndex || "grid", items = p.services;
+    if (st === "rows") return `<section class="svc-rows wrap">${eyebrow(`${items.length} ${words(items.length, "service")}`)}<div data-reveal="stagger">${items.map((s, i) => `<a class="svc-row" href="${pg.rel}services/${s.slug}/"><span class="num">${String(i + 1).padStart(2, "0")}</span><div class="svc-row-media">${imgTag(p, pg, s.image || i + 1, { sizes: "260px", alt: s.name })}</div><div class="svc-row-text"><h2>${esc(s.name)}</h2><p>${esc(s.short)}</p>${lines(s.bullets).length ? `<ul class="chip-list mini">${lines(s.bullets).slice(0, 3).map(x => `<li><span>${esc(x)}</span></li>`).join("")}</ul>` : ""}</div><span class="arrow" aria-hidden="true">→</span></a>`).join("")}</div></section>`;
+    if (st === "tabs") return `<section class="svc-tabs wrap" data-tabs>${eyebrow("Choose a service")}<div class="tab-list" role="tablist">${items.map((s, i) => `<button role="tab" aria-selected="${i === 0}" data-tab="${i}">${esc(s.name)}</button>`).join("")}</div>${items.map((s, i) => `<div class="tab-panel" role="tabpanel" data-tab-panel="${i}"${i ? " hidden" : ""}><div class="tab-grid"><div class="tab-media">${imgTag(p, pg, s.image || i + 1, { sizes: "50vw", alt: s.name })}</div><div><h2>${esc(s.name)}</h2><p class="lead">${esc(s.short)}</p>${paras(paraList(s.body)[0] || "")}${lines(s.bullets).length ? `<ul class="checks">${lines(s.bullets).slice(0, 4).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="btn btn-primary" data-magnetic href="${pg.rel}services/${s.slug}/">About ${esc(s.name.toLowerCase())} →</a></div></div></div>`).join("")}</section>`;
+    if (st === "bento") return `<section class="wrap svc-bento">${eyebrow("All services")}<div class="svc-bento-grid" data-reveal="stagger">${items.map((s, i) => `<a class="svc-bcell ${i % 5 === 0 ? "big" : ""}" data-tilt href="${pg.rel}services/${s.slug}/"><div class="svc-bmedia">${imgTag(p, pg, s.image || i + 1, { sizes: "40vw", alt: s.name })}</div><div class="svc-btext"><h2>${esc(s.name)}</h2><p>${esc(s.short)}</p></div></a>`).join("")}</div></section>`;
+    return servicesGrid(p, pg, items, { title: "All services", eyebrow: `${items.length} ${words(items.length, "service")}` });
+  }
+  function svcGallery(p, pg, s, cls = "") {
+    const ids = (Array.isArray(s.gallery) ? s.gallery : []).filter(id => p.images.some(i => i.id === id));
+    if (!ids.length) return "";
+    return `<section class="svc-gal wrap ${cls}" data-lightbox>${eyebrow("In pictures")}<div class="svc-gal-grid n${Math.min(ids.length, 6)}" data-reveal="stagger">${ids.slice(0, 6).map(id => `<figure data-tilt>${imgTag(p, pg, id, { sizes: "(min-width:900px) 33vw, 50vw" })}</figure>`).join("")}</div></section>`;
+  }
+  function svcCommon(p, pg, s) {
+    const b = p.business, city = pg.area ? pg.area.name : b.address.city;
+    const kw = lines(String(s.keywords || "").replace(/,/g, "\n"));
+    return {
+      b, city, kw, bullets: lines(s.bullets), faqs: parseFaqs(s.faqs), others: p.services.filter(x => x.slug !== s.slug).slice(0, 3),
+      areaNote: pg.area ? `<p class="area-note">${areaIntro(p, s, pg.area)}${b.mapLink ? ` <a href="${attr(b.mapLink)}" target="_blank" rel="noopener">Directions from ${esc(pg.area.name)} →</a>` : ""}</p>` : "",
+      kwH2: kw.length ? hashPick([`${kw[0]} in ${city}: what to expect`, `Why ${city} chooses us for ${kw[0].toLowerCase()}`, `${kw[0]} near ${city}, done properly`], s.slug + (pg.area ? pg.area.slug : "")) : "",
+      alsoServing: pg.area ? `<section class="wrap areas">${eyebrow("Also serving")}<ul class="chip-list" data-reveal="stagger">${p.areas.filter(a => a.slug !== pg.area.slug).slice(0, 12).map(a => `<li><a href="${pg.rel}services/${s.slug}/${a.slug}/">${esc(s.name)} in ${esc(a.name)}</a></li>`).join("")}<li><a href="${pg.rel}services/${s.slug}/">${esc(s.name)} in ${esc(b.address.city)}</a></li></ul></section>` : areasList(p, pg, s.slug),
+      bookCard: `<div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>`,
+    };
+  }
+  function serviceShowcase(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s);
+    const paras_ = paraList(s.body || s.short);
+    return [heroCinematic(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1, small: true }),
+      crumbsHtml(p, pg),
+      `<section class="svc-intro wrap"><div class="svc-intro-grid"><div data-reveal>${eyebrow("Overview")}${c.kwH2 ? `<h2 data-split>${esc(c.kwH2)}</h2>` : `<h2 data-split>${esc(s.name)}, explained</h2>`}${c.areaNote}${paras(paras_.slice(0, 2).join("\n\n"))}</div><div class="svc-intro-media" data-reveal="wipe"><div>${imgTag(p, pg, (s.gallery && s.gallery[0]) || s.image || s.id + 2, { sizes: "50vw", alt: s.name })}</div>${s.priceFrom ? `<span class="price-tag">From ${esc(s.priceFrom)}</span>` : ""}</div></div></section>`,
+      c.bullets.length ? `<section class="svc-incl wrap">${eyebrow("What’s included")}<div class="incl-grid" data-reveal="stagger">${c.bullets.map((x, i) => `<div class="incl" data-spotlight><span>0${i + 1}</span><p>${esc(x)}</p></div>`).join("")}</div></section>` : "",
+      svcGallery(p, pg, s),
+      paras_.length > 2 ? `<section class="prose wrap narrow" data-reveal>${paras(paras_.slice(2).join("\n\n"))}</section>` : "",
+      `<section class="wrap svc-book-band" data-reveal><div class="book-band" data-spotlight><div><h2>${copy(p, "cta", esc(c.city))}</h2><p>${copy(p, "ctaSub")}</p></div><div class="btn-row"><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${c.b.phone ? `<a class="btn btn-ghost" href="${telHref(c.b.phone)}">${esc(c.b.phone)}</a>` : ""}</div></div></section>`,
+      faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), `${s.name}: common questions`),
+      c.alsoServing, reviewsSection(p, pg, 4),
+      c.others.length ? `<section class="wrap related">${eyebrow("Related services")}<div class="svc-grid" data-reveal="stagger">${c.others.map((o, i) => `<a class="svc-card" data-tilt href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}"><div class="svc-media">${imgTag(p, pg, o.image || o.id + 1, { sizes: "33vw", alt: o.name })}</div><h3>${esc(o.name)}</h3><p>${esc(o.short)}</p><span class="arrow" aria-hidden="true">→</span></a>`).join("")}</div></section>` : "",
+      ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
+  function serviceSteps(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s);
+    const paras_ = paraList(s.body || s.short);
+    const stepsHtml = c.bullets.length ? `<section class="svc-steps wrap"><div class="svc-steps-grid"><div class="svc-steps-side" data-reveal>${eyebrow("What to expect")}<h2 data-split>${esc(s.name)}, step by step</h2>${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}${p.financing.enabled ? `<p><a class="link-arrow" href="${pg.rel}financing/">Payment options →</a></p>` : ""}</div><ol class="step-list" data-reveal="stagger">${c.bullets.map((x, i) => `<li><span>${String(i + 1).padStart(2, "0")}</span><div><h3>${esc(x.split(/[:—–-]\s/)[0])}</h3>${x.includes(": ") ? `<p>${esc(x.split(": ").slice(1).join(": "))}</p>` : ""}</div></li>`).join("")}</ol></div></section>` : "";
+    return [heroSplit(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1 }),
+      crumbsHtml(p, pg),
+      `<section class="prose wrap narrow" data-reveal>${c.areaNote}${c.kwH2 ? `<h2>${esc(c.kwH2)}</h2>` : ""}${paras(paras_.join("\n\n"))}</section>`,
+      stepsHtml, svcGallery(p, pg, s),
+      `<section class="wrap svc-faq-split"><div class="svc-cols"><div>${faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), "Questions about " + s.name.toLowerCase()).replace('class="faq wrap"', 'class="faq"')}</div><aside class="svc-aside" data-reveal>${c.bookCard}${c.others.length ? `<div class="aside-links"><h3>Related services</h3><ul>${c.others.map(o => `<li><a href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}">${esc(o.name)}</a></li>`).join("")}</ul></div>` : ""}</aside></div></section>`,
+      c.alsoServing, reviewsSection(p, pg, 4), ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
+  function serviceEditorial(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s), ps = paraList(s.body || s.short);
+    const quote = p.reviews.find(r => new RegExp(s.name.split(" ")[0], "i").test(r.text)) || p.reviews[0];
+    const toc = [["overview", "Overview"], c.bullets.length ? ["included", "What’s included"] : null, (s.gallery || []).length ? ["pictures", "In pictures"] : null, ["faq", "Questions"], ["book", "Book"]].filter(Boolean);
+    return [`<section class="hero hero-editorial hero-svc-ed" data-scroll><div class="hero-inner">${eyebrow(pg.area ? `${s.name} · ${pg.area.name}` : "Service")}<h1 data-split>${esc(s.name)} in <em>${esc(c.city)}</em></h1><div class="hero-ed-row"><p class="lead" data-reveal>${esc(s.short)}</p>${ctaButtons(p, pg)}</div></div><div class="ed-hero-img" data-reveal="wipe"><div>${imgTag(p, pg, s.image || s.id + 1, { sizes: "100vw", eager: true, alt: "" })}</div></div></section>`,
+      crumbsHtml(p, pg),
+      `<section class="wrap ed-body"><div class="ed-grid"><nav class="ed-toc" aria-label="On this page" data-reveal><p class="eyebrow">On this page</p><ol>${toc.map(([id, l]) => `<li><a href="#${id}">${l}</a></li>`).join("")}</ol>${c.bookCard}</nav><article class="prose ed-prose" data-reveal><h2 id="overview">${esc(c.kwH2 || "Overview")}</h2>${c.areaNote}${paras(ps.slice(0, 2).join("\n\n"))}${quote ? `<blockquote class="pull">“${esc(typo(cutAt(quote.text, 180)))}”<cite>— ${esc(quote.author)}</cite></blockquote>` : ""}${paras(ps.slice(2).join("\n\n"))}${c.bullets.length ? `<h2 id="included">What’s included</h2><ul class="checks">${c.bullets.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}</article></div></section>`,
+      svcGallery(p, pg, s).replace('class="svc-gal wrap', 'id="pictures" class="svc-gal wrap'),
+      faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), `Questions about ${s.name.toLowerCase()}`),
+      c.alsoServing, reviewsSection(p, pg, 4),
+      `<div id="book"></div>` + ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
   function legal(p, pg, title, html) {
     return [`<section class="hero hero-sm hero-plain" data-scroll><div class="hero-inner"><p class="eyebrow">Legal</p><h1 data-split>${esc(title)}</h1><p class="lead">Last updated ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p></div></section>`, crumbsHtml(p, pg), `<section class="wrap prose narrow" data-reveal>${html}</section>`].join("\n");
   }
@@ -740,6 +814,26 @@ ${dock}
     }
   }
 
+  function securityHead(p) {
+    const sec = p.security || {}; if (!sec.csp) return "";
+    const ga = p.seo.gaId ? " https://www.googletagmanager.com https://www.google-analytics.com" : "";
+    const form = p.forms.provider === "formspree" ? " https://formspree.io" : "";
+    const maps = p.business.mapEmbed ? " https://www.google.com" : "";
+    return `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'${ga}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; connect-src 'self'${ga}${form}; form-action 'self'${form}; frame-src${maps || " 'none'"}; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">`;
+  }
+  function securityFiles(p, files) {
+    const sec = p.security || {}, base = (p.seo.siteUrl || "").replace(/\/+$/, "");
+    if (sec.securityTxt) files[".well-known/security.txt"] = `Contact: ${p.business.email ? "mailto:" + p.business.email : (base + "/contact/")}\nPreferred-Languages: en\nCanonical: ${base}/.well-known/security.txt\nPolicy: ${base}/privacy/\nExpires: ${new Date(Date.now() + 365 * 864e5).toISOString()}\n`;
+    if (sec.headersFile) {
+      const h = `/*\n  X-Frame-Options: SAMEORIGIN\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\n  Cross-Origin-Opener-Policy: same-origin\n  Cross-Origin-Resource-Policy: same-origin\n  Cache-Control: public, max-age=3600\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`;
+      files["_headers"] = h;
+      files["vercel.json"] = JSON.stringify({ headers: [{ source: "/(.*)", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }, { key: "X-Content-Type-Options", value: "nosniff" }, { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }, { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }, { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" }] }] }, null, 2);
+      files["SECURITY.md"] = `# Security notes for ${p.business.name} website\n\nThis is a fully static site: no server-side code, database, CMS, plugins or admin login exist, so there is nothing to inject into or log in to.\n\nProtections in place:\n- Content-Security-Policy restricting scripts to this origin${p.seo.gaId ? " and Google Analytics" : ""}, no inline scripts, no third-party frames except the map\n- X-Content-Type-Options, Referrer-Policy and Permissions-Policy meta tags; _headers (Netlify/Cloudflare Pages) and vercel.json provide the full HTTP header set including HSTS on hosts that support custom headers\n- All user-entered text is HTML-escaped at build time\n- Forms: honeypot field, timing trap, HTTPS-only POST to the form provider; no form data is stored on the site\n- External links use rel="noopener"; the site enforces HTTPS\n- /.well-known/security.txt gives researchers a contact\n\nOperational advice:\n- Protect the GitHub account with 2FA and a hardware key; it is the only thing that can change this site\n- Use a dedicated GitHub token with repo scope only and rotate it\n- Keep the domain registrar account on 2FA; DNS hijacking is the realistic attack on a static site\n- Enable DNSSEC and set CAA records if your registrar supports them\n`;
+    }
+  }
   /* ---------- assemble one page ---------- */
   function renderPage(p, pg, pages, css, js) {
     pg.description = describe(p, pg);
@@ -768,6 +862,7 @@ ${canonical}
 <meta name="geo.region" content="${attr(p.business.address.country || "US")}-${attr(p.business.address.state)}"><meta name="geo.placename" content="${attr(p.business.address.city)}">${p.business.lat && p.business.lng ? `<meta name="geo.position" content="${attr(p.business.lat)};${attr(p.business.lng)}"><meta name="ICBM" content="${attr(p.business.lat)}, ${attr(p.business.lng)}">` : ""}
 ${p.seo.googleVerification ? `<meta name="google-site-verification" content="${attr(p.seo.googleVerification)}">` : ""}${p.seo.bingVerification ? `<meta name="msvalidate.01" content="${attr(p.seo.bingVerification)}">` : ""}
 <meta name="theme-color" content="${attr(p.brand.primary)}">
+${securityHead(p)}
 <link rel="icon" href="${pg.rel}assets/favicon.svg" type="image/svg+xml">${p.brand.logo ? `<link rel="apple-touch-icon" href="${pg.rel}assets/logo.${p.brand.logoExt || "png"}">` : ""}
 <link rel="manifest" href="${pg.rel}manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -945,6 +1040,18 @@ ${f.underline ? `h1 em,h2 em,h1 em .w>span,h2 em .w>span{background:none!importa
 .preloader{position:fixed;inset:0;z-index:999;background:var(--primary);display:grid;place-items:center;transition:transform .8s var(--ease)}.preloader.is-done{transform:translateY(-100%)}.pre-inner{animation:prefade .6s both .1s}.pre-logo{height:56px;width:auto;filter:brightness(0) invert(1)}.preloader .wordmark{color:#fff;font-size:2rem}@keyframes prefade{from{opacity:0;transform:translateY(12px)}}.preloader.is-done .pre-inner{opacity:0;transition:opacity .3s}
 .dock{position:fixed;right:1.5rem;bottom:1.5rem;z-index:95;display:none;opacity:0;transform:translateY(20px);transition:.5s var(--ease)}@media(min-width:1000px){.dock{display:block}}.dock.is-visible{opacity:1;transform:none}.dock-toggle{display:flex;align-items:center;gap:.6rem;padding:.9rem 1.3rem;border-radius:999px;border:0;background:var(--ink);color:var(--paper);font:600 .9rem var(--font-b);cursor:pointer;box-shadow:0 20px 40px -15px rgba(0,0,0,.5)}.dock-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2s infinite}.dock-panel{position:absolute;right:0;bottom:calc(100% + .8rem);width:280px;padding:1.3rem;border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 30px 60px -20px rgba(0,0,0,.4);opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;transition:.35s var(--ease)}.dock.is-open .dock-panel{opacity:1;transform:none;pointer-events:auto}.dock-panel .btn{width:100%;justify-content:center;margin-top:.6rem}.dock-panel p{font-size:.9rem;margin:0 0 .4rem}
 .cta-sub{max-width:48ch;margin:.5rem auto 0;opacity:.85}
+/* service variants */
+.svc-gal-grid{display:grid;gap:.8rem;grid-template-columns:repeat(2,1fr)}@media(min-width:900px){.svc-gal-grid{grid-template-columns:repeat(3,1fr)}.svc-gal-grid.n2{grid-template-columns:repeat(2,1fr)}.svc-gal-grid.n4{grid-template-columns:repeat(4,1fr)}.svc-gal-grid.n5 figure:first-child,.svc-gal-grid.n6 figure:first-child{grid-column:span 2;grid-row:span 2}}.svc-gal-grid figure{margin:0;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}.svc-gal-grid figure img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-gal-grid figure:hover img{transform:scale(1.05)}
+.svc-intro-grid{display:grid;gap:2.5rem;align-items:center}@media(min-width:900px){.svc-intro-grid{grid-template-columns:1.1fr 1fr;gap:5rem}}.svc-intro-media{position:relative}.svc-intro-media>div{border-radius:var(--radius);overflow:hidden;aspect-ratio:4/5}.svc-intro-media img{width:100%;height:100%;object-fit:cover}.price-tag{position:absolute;left:1rem;bottom:1rem;padding:.6rem 1rem;border-radius:999px;background:var(--accent);color:#111;font:600 .85rem var(--font-b)}
+.incl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}.incl{padding:1.5rem;border-radius:var(--radius);background:var(--paper-2);display:flex;gap:1rem;align-items:flex-start}.incl span{font:600 .75rem var(--font-b);letter-spacing:.15em;color:var(--accent);padding-top:.3rem}.incl p{margin:0;font-weight:500}
+.book-band{display:grid;gap:1.5rem;align-items:center;padding:clamp(1.6rem,4vw,3rem);border-radius:calc(var(--radius) + 8px);background:var(--ink);color:var(--paper)}@media(min-width:900px){.book-band{grid-template-columns:1.4fr 1fr}.book-band .btn-row{justify-content:flex-end}}.book-band h2{font-size:clamp(1.6rem,3vw,2.4rem);margin:0 0 .4rem}.book-band p{margin:0;opacity:.75}
+.svc-steps-grid{display:grid;gap:2.5rem}@media(min-width:900px){.svc-steps-grid{grid-template-columns:1fr 1.5fr;gap:5rem}.svc-steps-side{position:sticky;top:calc(var(--header-h,80px) + 2rem);align-self:start}}.step-list{list-style:none;margin:0;padding:0;counter-reset:s}.step-list li{display:grid;grid-template-columns:auto 1fr;gap:1.4rem;padding:1.8rem 0;border-top:1px solid var(--line)}.step-list li:last-child{border-bottom:1px solid var(--line)}.step-list span{font:600 1.4rem/1 var(--font-d);color:var(--accent);width:2.4rem}.step-list h3{margin:0 0 .3rem;font-size:1.3rem}.step-list p{margin:0;color:var(--muted)}
+.svc-faq-split .faq{padding-block:0}
+.svc-row{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:center;padding:1.8rem 0;border-top:1px solid var(--line);text-decoration:none;transition:padding .4s var(--ease)}@media(min-width:800px){.svc-row{grid-template-columns:3rem 220px 1fr auto}}.svc-row:last-child{border-bottom:1px solid var(--line)}.svc-row:hover{padding-left:1rem}.svc-row .num{color:var(--accent);font:600 .8rem var(--font-b);letter-spacing:.15em}.svc-row-media{display:none;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}@media(min-width:800px){.svc-row-media{display:block}}.svc-row-media img{width:100%;height:100%;object-fit:cover}.svc-row h2{font-size:1.6rem;margin:0 0 .3rem}.svc-row p{color:var(--muted);margin:0 0 .6rem}.chip-list.mini li span{display:inline-block;padding:.3rem .7rem;border:1px solid var(--line);border-radius:999px;font-size:.78rem}.svc-row .arrow{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--paper-2);transition:.4s}.svc-row:hover .arrow{background:var(--accent);transform:rotate(-45deg)}
+.tab-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:2rem}.tab-list button{padding:.7rem 1.1rem;border-radius:999px;border:1px solid var(--line);background:transparent;color:inherit;font:600 .9rem var(--font-b);cursor:pointer}.tab-list button[aria-selected=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}.tab-grid{display:grid;gap:2rem;align-items:center}@media(min-width:900px){.tab-grid{grid-template-columns:1fr 1fr;gap:4rem}}.tab-media{border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}.tab-media img{width:100%;height:100%;object-fit:cover}.tab-panel{animation:qin .5s var(--ease)}
+.svc-bento-grid{display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)}@media(min-width:900px){.svc-bento-grid{grid-template-columns:repeat(4,1fr)}.svc-bcell.big{grid-column:span 2;grid-row:span 2}}.svc-bcell{position:relative;display:block;border-radius:var(--radius);overflow:hidden;aspect-ratio:1;text-decoration:none;color:#fff}.svc-bcell.big{aspect-ratio:auto}.svc-bmedia,.svc-bmedia img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-bcell:hover img{transform:scale(1.06)}.svc-btext{position:absolute;inset:auto 0 0 0;padding:1.3rem;background:linear-gradient(transparent,rgba(0,0,0,.8))}.svc-btext h2{font-size:1.3rem;margin:0 0 .2rem}.svc-btext p{margin:0;font-size:.85rem;opacity:.85;display:none}.svc-bcell.big .svc-btext p{display:block}.svc-bcell.big h2{font-size:2rem}
+.hero-svc-ed{padding-bottom:0}.ed-hero-img{width:min(var(--wrap),calc(100% - 2rem));margin:3rem auto -4rem}.ed-hero-img>div{aspect-ratio:21/9;border-radius:var(--radius);overflow:hidden}.ed-hero-img img{width:100%;height:100%;object-fit:cover}.ed-body{padding-top:7rem}.ed-grid{display:grid;gap:3rem}@media(min-width:960px){.ed-grid{grid-template-columns:260px 1fr;gap:5rem}.ed-toc{position:sticky;top:calc(var(--header-h,80px) + 2rem);align-self:start}}.ed-toc ol{list-style:none;padding:0;margin:0 0 1.5rem}.ed-toc li{border-top:1px solid var(--line)}.ed-toc a{display:block;padding:.6rem 0;text-decoration:none;font-weight:500}.ed-toc a:hover{color:var(--primary)}.ed-prose{max-width:68ch}.ed-toc .aside-card{padding:1.2rem}.ed-toc .aside-card .btn{font-size:.85rem;padding:.8rem .6rem}.ed-prose p:first-of-type::first-letter{font:600 3.4em/.8 var(--font-d);float:left;margin:.1em .15em 0 0;color:var(--accent)}.pull{margin:2.5rem 0;padding:0 0 0 1.5rem;border-left:3px solid var(--accent);font:400 1.5rem/1.35 var(--font-d);font-style:italic}.pull cite{display:block;font:500 .85rem var(--font-b);font-style:normal;margin-top:.6rem;color:var(--muted)}
+.post-list-home .post-card h3{font-size:1.3rem;margin:.3rem 0}.related .svc-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .usp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem}.usp{padding:1.6rem;border-top:2px solid var(--accent);background:var(--paper-2);border-radius:0 0 var(--radius) var(--radius)}.usp span{font:600 .75rem var(--font-b);letter-spacing:.15em;color:var(--accent)}.usp h3{font-size:1.25rem;margin:.5rem 0 .3rem}.usp p{color:var(--muted);margin:0;font-size:.95rem}
 @media(prefers-reduced-motion:reduce){.kinetic,.process-media img,.preloader,.dock{transition:none!important;animation:none!important}}`;
   }
@@ -1009,6 +1116,9 @@ document.querySelectorAll('[data-process]').forEach(function(ol){
   var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){var n=x.target.getAttribute('data-step-index');items.forEach(function(li){li.classList.toggle('is-active',li===x.target)});imgs.forEach(function(im){im.classList.toggle('is-active',im.getAttribute('data-process-img')===n)})}})},{rootMargin:'-45% 0px -45% 0px'});
   items.forEach(function(li){io.observe(li)});if(items[0])items[0].classList.add('is-active');if(imgs[0])imgs[0].classList.add('is-active');
 });
+document.querySelectorAll('[data-em]').forEach(function(a){var e=a.getAttribute('data-em').split('').reverse().join('');a.href='mailto:'+e;a.textContent=e});
+document.querySelectorAll('[data-timetrap]').forEach(function(i){var t0=Date.now();i.form.addEventListener('submit',function(e){i.value=String(Date.now()-t0);if(Date.now()-t0<2500){e.preventDefault();var b=i.form.querySelector('button[type=submit]');if(b){b.disabled=false;b.querySelector('span').textContent='Please take a moment, then send again'}}},true)});
+document.querySelectorAll('[data-tabs]').forEach(function(w){w.addEventListener('click',function(e){var t=e.target.closest('[data-tab]');if(!t)return;w.querySelectorAll('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===t)});w.querySelectorAll('[data-tab-panel]').forEach(function(pn){pn.hidden=pn.getAttribute('data-tab-panel')!==t.getAttribute('data-tab')})})});
 document.querySelectorAll('[data-ba]').forEach(function(fig){var r=fig.querySelector('input[type=range]'),set=function(){fig.style.setProperty('--ba',r.value+'%')};r.addEventListener('input',set);set()});
 document.querySelectorAll('[data-quiz]').forEach(function(q){
   var steps=q.querySelectorAll('[data-quiz-step]'),urgentMsg=q.querySelector('[data-quiz-urgent-msg]');
@@ -1040,6 +1150,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     files["robots.txt"] = robots(p);
     files["llms.txt"] = llmsTxt(p, pages);
     files["manifest.webmanifest"] = manifest(p);
+    securityFiles(p, files);
     files[".nojekyll"] = "";
     files["CNAME"] = p.seo.customDomain ? p.seo.customDomain : undefined;
     if (!p.seo.customDomain) delete files["CNAME"];
@@ -1083,8 +1194,19 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     add("design", (p.headlines && Object.values(p.headlines).some(Boolean)) || p.voice !== "warm", 6, "Custom voice or headline overrides", "Pick a voice / write a headline");
     add("design", p.forms.endpoint, 8, "Forms deliver (Formspree endpoint)", "Add the endpoint in step 7");
     add("design", p.reviews.length >= 4, 4, "Review wall (4+ reviews)", "");
+    out.security = [];
+    add("security", true, 20, "Static site: no server code, database, CMS or admin login to attack", "");
+    add("security", p.security.csp, 15, "Content-Security-Policy, nosniff, referrer and permissions policies", "Enable CSP in step 7");
+    add("security", p.security.honeypot && p.security.timetrap, 10, "Form spam protection (honeypot + timing trap)", "Enable in step 7");
+    add("security", p.security.headersFile, 10, "HSTS/X-Frame-Options header files for Netlify, Cloudflare, Vercel", "Enable header files");
+    add("security", p.security.securityTxt, 5, "security.txt for responsible disclosure", "Enable security.txt");
+    add("security", p.security.hideEmail || !b.email, 5, "Email address obfuscated against scrapers", "Enable email obfuscation");
+    add("security", (p.seo.siteUrl || "").startsWith("https://"), 10, "HTTPS site URL", "Use an https:// URL");
+    add("security", !p.seo.gaId || true, 5, "No third-party scripts beyond analytics", "");
+    add("security", true, 10, "All content HTML-escaped at build; no inline event handlers", "");
+    add("security", p.seo.customDomain ? true : true, 10, "GitHub Pages enforces HTTPS and TLS 1.2+", "");
     const pct = (arr) => Math.round(arr.reduce((a, x) => a + (x.ok ? x.w : 0), 0) / arr.reduce((a, x) => a + x.w, 0) * 100);
-    return { seo: pct(out.seo), geo: pct(out.geo), aeo: pct(out.aeo), design: pct(out.design), items: out };
+    return { seo: pct(out.seo), geo: pct(out.geo), aeo: pct(out.aeo), design: pct(out.design), security: pct(out.security), items: out };
   }
   const api = { build, plan, normalize, slug, parseFaqs, DEFAULT, score, seedLook };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.PSB = api;

@@ -144,6 +144,11 @@
         <select id="font-preset"><option value="">Font pairing…</option></select>
         <button class="ghost" id="btn-random" type="button">🎲 Randomize look</button>
       </div>
+      <h2>Home page sections</h2>
+      <p class="hint">Untick anything you don't want on this client's home page. Order follows the layout.</p>
+      <div class="toggles">
+        <label><input type="checkbox" data-bind="home.ticker"> Service ticker</label><label><input type="checkbox" data-bind="home.manifesto"> Manifesto line</label><label><input type="checkbox" data-bind="home.stats"> Stats band</label><label><input type="checkbox" data-bind="home.usps"> Why choose us</label><label><input type="checkbox" data-bind="home.bento"> Bento grid</label><label><input type="checkbox" data-bind="home.services"> Services</label><label><input type="checkbox" data-bind="home.about"> About split</label><label><input type="checkbox" data-bind="home.process"> How it works</label><label><input type="checkbox" data-bind="home.parallax"> Parallax photo break</label><label><input type="checkbox" data-bind="home.beforeAfter"> Before / after</label><label><input type="checkbox" data-bind="home.reviews"> Reviews</label><label><input type="checkbox" data-bind="home.quiz"> Quiz</label><label><input type="checkbox" data-bind="home.gallery"> Gallery strip</label><label><input type="checkbox" data-bind="home.team"> Team preview</label><label><input type="checkbox" data-bind="home.blog"> Latest articles</label><label><input type="checkbox" data-bind="home.areas"> Service areas</label><label><input type="checkbox" data-bind="home.faq"> FAQ</label><label><input type="checkbox" data-bind="home.contact"> Visit / hours / map</label>
+      </div>
       <h2>Hero video (optional)</h2>
       <p class="hint">If the client has a short clip (MP4 or WebM, under ~8 MB, 10–20 s, no sound needed) it plays silently behind the Cinematic and Bold heroes with the first photo as poster. Skipped on reduced-motion and data-saver.</p>
       <label>Video file<input type="file" id="video-file" accept="video/mp4,video/webm"></label>
@@ -216,6 +221,12 @@
     <section data-panel="services">
       <h1>Services</h1>
       <p class="hint">Each service becomes its own page, and each service × service area becomes another page: 8 services × 10 areas = 80 location pages plus the core pages. Write each description in your own words; optional AI drafting (step 7) can help you expand bullet points.</p>
+      <h2>Service page design</h2>
+      <p class="hint">Three page designs are built in. <strong>Alternate</strong> rotates them across the site so service pages don't all look identical; you can also pin one per service on its card.</p>
+      <div class="grid2">
+        <label>Service pages<select data-bind="serviceLayout"><option value="alternate">Alternate — classic → showcase → steps → editorial</option><option value="classic">Classic — two columns, sticky booking card</option><option value="showcase">Showcase — photo intro, inclusion cards, gallery, booking band</option><option value="steps">Steps — split hero, step-by-step, FAQ beside booking</option><option value="editorial">Editorial — magazine long-form, table of contents, pull quote</option></select></label>
+        <label>Services index page<select data-bind="servicesIndex"><option value="grid">Card grid</option><option value="rows">Editorial rows with photos</option><option value="tabs">Tabbed explorer</option><option value="bento">Photo bento wall</option></select></label>
+      </div>
       <div class="toolbar"><button class="primary" id="svc-add">+ Add service</button><button class="ghost" id="svc-bulk">Paste a list</button><span class="muted" id="svc-count"></span></div>
       <div id="svc-list" class="cards"></div>
       <div class="nav-row"><button class="ghost" data-next="images">← Back</button><button class="primary" data-next="areas">Next: Service areas →</button></div>
@@ -302,6 +313,16 @@
       <div class="grid2">
         <label>Provider<select data-bind="forms.provider"><option value="formspree">Formspree (recommended)</option><option value="netlify">Netlify Forms (if hosted on Netlify)</option><option value="mailto">Email link (fallback)</option></select></label>
         <label>Formspree endpoint<input data-bind="forms.endpoint" placeholder="https://formspree.io/f/xxxxxxxx"></label>
+      </div>
+      <h2>Security</h2>
+      <p class="hint">The generated site is static — no server code, database, CMS or login exists, which removes the attacks that hit WordPress sites. These add the remaining protections.</p>
+      <div class="toggles">
+        <label><input type="checkbox" data-bind="security.csp"> Content-Security-Policy + nosniff + referrer + permissions policies</label>
+        <label><input type="checkbox" data-bind="security.honeypot"> Form honeypot</label>
+        <label><input type="checkbox" data-bind="security.timetrap"> Form timing trap (blocks bots that submit instantly)</label>
+        <label><input type="checkbox" data-bind="security.hideEmail"> Obfuscate email against scrapers</label>
+        <label><input type="checkbox" data-bind="security.securityTxt"> /.well-known/security.txt</label>
+        <label><input type="checkbox" data-bind="security.headersFile"> HSTS / X-Frame-Options header files (_headers, vercel.json) + SECURITY.md</label>
       </div>
       <h2>AI copy assist (optional)</h2>
       <p class="hint">Paste your own Anthropic API key to draft service descriptions, FAQs and blog posts from your notes. The key stays in this browser only. Everything drafted is marked for you to review: AI must not invent facts, prices or reviews.</p>

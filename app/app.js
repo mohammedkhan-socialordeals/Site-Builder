@@ -119,12 +119,15 @@
       const c = document.createElement("div"); c.className = "card";
       c.innerHTML = `<h3>${esc(opts.title ? opts.title(item, i) : (item.name || item.title || item.q || "Item " + (i + 1)))}</h3>` +
         fields.map(f => {
+          if (f.type === "images") return `<div class="imgpick"><span>${f.label}</span><div class="imgpick-grid">${project.images.map(im => `<label class="imgpick-item"><input type="checkbox" data-fm="${f.key}" value="${im.id}" ${(item[f.key] || []).includes(im.id) ? "checked" : ""}><img src="${IMAGES.get(im.id) ? IMAGES.get(im.id).thumb : ""}" alt=""></label>`).join("") || "<em class=muted>Upload photos in step 3 first</em>"}</div></div>`;
+          if (f.type === "select") return `<label>${f.label}<select data-f="${f.key}">${f.options.map(([v, l]) => `<option value="${v}" ${item[f.key] === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>`;
           if (f.type === "image") return `<label>${f.label}<select data-f="${f.key}"><option value="">(auto)</option>${project.images.map(im => `<option value="${im.id}" ${item[f.key] === im.id ? "selected" : ""}>${esc(im.alt || im.id)}</option>`).join("")}</select></label>`;
           if (f.type === "textarea") return `<label>${f.label}<textarea data-f="${f.key}" rows="${f.rows || 3}" placeholder="${esc(f.ph || "")}">${esc(item[f.key])}</textarea></label>`;
           return `<label>${f.label}<input data-f="${f.key}" value="${esc(item[f.key])}" placeholder="${esc(f.ph || "")}" ${f.type ? `type="${f.type}"` : ""}></label>`;
         }).join("") +
         (opts.ai ? `<button class="ghost ai" type="button" title="Draft with AI">✦ AI</button>` : "") +
         `<button class="mv" type="button" title="Move up">↑</button><button class="rm" type="button" aria-label="Remove">×</button>`;
+      c.querySelectorAll("[data-fm]").forEach(el => el.addEventListener("change", () => { item[el.dataset.fm] = [...c.querySelectorAll(`[data-fm="${el.dataset.fm}"]:checked`)].map(x => x.value).slice(0, 6); persist(); }));
       c.querySelectorAll("[data-f]").forEach(el => el.addEventListener("input", () => { item[el.dataset.f] = el.value; if (el.dataset.f === "name" || el.dataset.f === "title" || el.dataset.f === "q") c.querySelector("h3").textContent = el.value || "Item"; updateCounts(); persist(); }));
       c.querySelector(".rm").addEventListener("click", () => { arr.splice(i, 1); cardList(listSel, arr, fields, opts); updateCounts(); persist(); });
       c.querySelector(".mv").addEventListener("click", () => { if (i > 0) { [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; cardList(listSel, arr, fields, opts); persist(); } });
@@ -141,7 +144,9 @@
     { key: "faqs", label: "Service FAQs (question line, answer line, blank line between)", type: "textarea", rows: 4, ph: "Does it hurt?\nMost patients report only mild soreness…" },
     { key: "keywords", label: "Target keywords for this service (one per line; first drives the title & H2)", type: "textarea", rows: 2, ph: "Emergency vet\n24 hour vet near me" },
     { key: "priceFrom", label: "Price from (optional, only if accurate)", ph: "$199" },
-    { key: "image", label: "Photo", type: "image" },
+    { key: "image", label: "Hero photo", type: "image" },
+    { key: "gallery", label: "Gallery photos for this service (tick up to 6)", type: "images" },
+    { key: "variant", label: "Page design", type: "select", options: [["", "Auto (site setting)"], ["classic", "Classic"], ["showcase", "Showcase"], ["steps", "Steps"], ["editorial", "Editorial"]] },
   ];
   const AREA_FIELDS = [{ key: "name", label: "City / neighborhood *", ph: "San Dimas" }, { key: "state", label: "State", ph: "CA" }, { key: "note", label: "Local note (optional, keeps the page specific)", ph: "About 10 minutes from our office via Arrow Hwy." }];
   const REV_FIELDS = [{ key: "author", label: "Name as shown", ph: "Maria G." }, { key: "rating", label: "Rating (1–5)", type: "number" }, { key: "text", label: "Review text (verbatim)", type: "textarea" }, { key: "source", label: "Source", ph: "Google" }];
@@ -164,7 +169,7 @@
     cardList("#ba-list", project.beforeAfter, BA_FIELDS, { title: (x, i) => x.label || "Pair " + (i + 1) });
   }
   const adders = {
-    "#svc-add": () => project.services.push({ name: "", short: "", body: "", bullets: "", faqs: "", priceFrom: "", image: "" }),
+    "#svc-add": () => project.services.push({ name: "", short: "", body: "", bullets: "", faqs: "", keywords: "", priceFrom: "", image: "", gallery: [], variant: "" }),
     "#area-add": () => project.areas.push({ name: "", state: project.business.address.state, note: "" }),
     "#rev-add": () => project.reviews.push({ author: "", rating: 5, text: "", source: "Google" }),
     "#faq-add": () => project.faqs.push({ q: "", a: "" }),
@@ -368,7 +373,7 @@
   function renderBuildPanel() {
     const sc = PSB.score(project);
     const cls = (n) => n >= 80 ? "g" : n >= 55 ? "y" : "r";
-    $("#scores").innerHTML = [["SEO", sc.seo], ["GEO (local)", sc.geo], ["AEO (AI answers)", sc.aeo], ["Design & conversion", sc.design]].map(([l, n]) => `<div class="score ${cls(n)}"><strong>${n}</strong><span>${l}</span></div>`).join("");
+    $("#scores").innerHTML = [["SEO", sc.seo], ["GEO (local)", sc.geo], ["AEO (AI answers)", sc.aeo], ["Design & conversion", sc.design], ["Security", sc.security]].map(([l, n]) => `<div class="score ${cls(n)}"><strong>${n}</strong><span>${l}</span></div>`).join("");
     $("#score-items").innerHTML = Object.entries(sc.items).map(([k, arr]) => arr.map(x => `<div class="${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "✗"} ${esc(x.label)} <em>(${x.w})</em>${!x.ok && x.fix ? `<small>→ ${esc(x.fix)}</small>` : ""}</div>`).join("")).join("");
     const cs = checks(); $("#checks").innerHTML = cs.map(x => `<div class="${x.cls}">${esc(x.msg)}</div>`).join("");
     const pages = PSB.plan(PSB.normalize(structuredClone(project)));
