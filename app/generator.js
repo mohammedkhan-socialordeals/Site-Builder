@@ -151,12 +151,15 @@
   }
 
   /* ---------- images ---------- */
+  const bigImgs = (p) => p.images.filter(i => (i.w || 0) >= 1200);
+  function wideId(p, idx, fallback) { const b = bigImgs(p); return b.length ? b[idx % b.length].id : fallback; }
   function imgTag(p, pg, id, opts = {}) {
     const im = p.images.find(i => i.id === id) || (typeof id === "number" ? pick(p.images, id) : null) || pick(p.images, 0);
     if (!im) return `<div class="ph" aria-hidden="true"></div>`;
-    const base = pg.rel + "assets/img/" + im.id;
+    const base = pg.rel + "assets/img/" + im.id, w = im.w || 1600;
     const sizes = opts.sizes || "(min-width: 900px) 50vw, 100vw";
-    return `<img src="${base}.jpg" srcset="${base}-800.jpg 800w, ${base}.jpg 1600w" sizes="${sizes}" width="${im.w || 1600}" height="${im.h || 1067}" alt="${attr(opts.alt || im.alt || "")}" loading="${opts.eager ? "eager" : "lazy"}" decoding="async"${opts.extra || ""}>`;
+    const srcset = w > 900 ? `${base}-800.jpg 800w, ${base}.jpg ${w}w` : `${base}.jpg ${w}w`;
+    return `<img src="${base}.jpg" srcset="${srcset}" sizes="${sizes}"${opts.eager ? ' fetchpriority="high"' : ""} width="${im.w || 1600}" height="${im.h || 1067}" alt="${attr(opts.alt || im.alt || "")}" loading="${opts.eager ? "eager" : "lazy"}" decoding="async"${opts.extra || ""}>`;
   }
   function logoTag(p, pg, cls) {
     if (p.brand.logo) return `<img src="${pg.rel}assets/logo.${p.brand.logoExt || "png"}" alt="${attr(p.business.name)} logo" class="${cls}" width="${p.brand.logoW || 160}" height="${p.brand.logoH || 48}" loading="eager" decoding="async">`;
@@ -419,8 +422,8 @@ ${dock}
 </div></section>`;
   }
   function parallaxBreak(p, pg, idx) {
-    if (!p.brand.fx.parallax || !p.images[idx]) return "";
-    return `<div class="pbreak" data-scroll><div class="pbreak-img">${imgTag(p, pg, p.images[idx].id, { sizes: "100vw", alt: "" })}</div></div>`;
+    if (!p.brand.fx.parallax || bigImgs(p).length < 2) return "";
+    return `<div class="pbreak" data-scroll><div class="pbreak-img">${imgTag(p, pg, wideId(p, idx, 0), { sizes: "100vw", alt: "" })}</div></div>`;
   }
   function tickerSection(p) {
     if (!p.brand.fx.ticker || p.services.length < 3) return "";
@@ -481,7 +484,7 @@ ${dock}
 </section>`;
   }
   function ctaBand(p, pg, text) {
-    return `<section class="cta-band" data-spotlight data-scroll><div class="cta-bg">${imgTag(p, pg, p.images.length > 2 ? p.images[p.images.length - 1].id : 0, { sizes: "100vw", alt: "" })}</div><div class="wrap"><h2 data-split>${text}</h2><p class="cta-sub">${copy(p, "ctaSub")}</p><div class="btn-row"><a class="btn btn-light" data-magnetic href="${pg.rel}appointment/">${copy(p, "book")}</a>${p.business.phone ? `<a class="btn btn-ghost" href="${telHref(p.business.phone)}">${esc(p.business.phone)}</a>` : ""}</div></div></section>`;
+    return `<section class="cta-band" data-spotlight data-scroll><div class="cta-bg">${imgTag(p, pg, wideId(p, 3, p.images.length > 2 ? p.images[p.images.length - 1].id : 0), { sizes: "100vw", alt: "" })}</div><div class="wrap"><h2 data-split>${text}</h2><p class="cta-sub">${copy(p, "ctaSub")}</p><div class="btn-row"><a class="btn btn-light" data-magnetic href="${pg.rel}appointment/">${copy(p, "book")}</a>${p.business.phone ? `<a class="btn btn-ghost" href="${telHref(p.business.phone)}">${esc(p.business.phone)}</a>` : ""}</div></div></section>`;
   }
   function areasList(p, pg, serviceSlug) {
     if (!p.areas.length) return "";
@@ -539,7 +542,7 @@ ${dock}
     if (p.services.length) items.push({ n: p.services.length, s: "", l: "services offered" });
     if (p.reviews.length) items.push({ n: p.reviews.length, s: "+", l: "client reviews" });
     if (p.areas.length) items.push({ n: p.areas.length, s: "", l: "communities served" });
-    if (!items.length) return "";
+    if (items.length < 3) return "";
     return `<section class="stats wrap"><ul data-reveal="stagger">${items.map(i => `<li><strong data-count="${i.n}" data-suffix="${i.s}">${i.n}${i.s}</strong><span>${esc(i.l)}</span></li>`).join("")}</ul></section>`;
   }
 
@@ -561,7 +564,7 @@ ${dock}
       const gallery = p.images.length >= 4 ? `<section class="gallery-strip" data-lightbox><div class="wrap">${eyebrow("Gallery")}<h2 data-split>A look inside</h2></div><div class="marquee" data-marquee data-marquee-scroll><div>${p.images.slice(0, 8).map((im, i) => `<figure>${imgTag(p, pg, im.id, { sizes: "40vw" })}</figure>`).join("")}</div></div></section>` : "";
       const hoverList = p.services.length ? `<section class="hover-list wrap">${eyebrow("Explore")}<h2 data-split>Find the right service</h2><ul data-hover-reveal>${p.services.slice(0, 8).map((s, i) => `<li><a href="${pg.rel}services/${s.slug}/"><span>${esc(s.name)}</span><small>${esc(s.short)}</small></a>${imgTag(p, pg, s.image || i + 1, { extra: ' data-hover-media', sizes: "320px", alt: "" })}</li>`).join("")}</ul></section>` : "";
       const kin = (p.brand.fx.kinetic && p.areas.length >= 2) ? `<em class="kinetic" data-kinetic="${attr(JSON.stringify([city, ...p.areas.slice(0, 5).map(a => a.name)]))}">${esc(city)}</em>` : `<em>${esc(city)}</em>`;
-      const H = hero(p, pg, { eyebrowText: `${city}, ${b.address.state}`, h1: copy(p, "hero", esc(primaryKeyword(p)), esc(city)).replace(`<em>${esc(city)}</em>`, kin), lead: esc(b.tagline || b.description.split(/\n/)[0].slice(0, 180)), imgId: 0 });
+      const H = hero(p, pg, { eyebrowText: `${city}, ${b.address.state}`, h1: copy(p, "hero", esc(primaryKeyword(p)), esc(city)).replace(`<em>${esc(city)}</em>`, kin), lead: esc(b.tagline || b.description.split(/\n/)[0].slice(0, 180)), imgId: wideId(p, 0, 0) });
       const cards = servicesGrid(p, pg, p.services.slice(0, 8), { hscroll: true, title: copy(p, "services", esc(city)) });
       const grid = servicesGrid(p, pg, p.services.slice(0, 9), { title: copy(p, "services", esc(city)) });
       const L = p.brand.layout || "cinematic", cta = ctaBand(p, pg, copy(p, "cta", city));
@@ -607,7 +610,7 @@ ${dock}
       return [hero(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1, small: true }),
         crumbsHtml(p, pg),
         `<section class="svc-detail wrap"><div class="svc-cols">
-  <article class="prose" data-reveal>${areaIntroHtml}${kwH2}${paras(s.body || s.short)}
+  <article class="prose" data-reveal>${areaIntroHtml}${kwH2}${paras(svcBody(p, pg, s).join("\n\n"))}
     ${bullets.length ? `<h2>What’s included</h2><ul class="checks" data-reveal="stagger">${bullets.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     ${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}
     ${p.financing.enabled ? `<p>Flexible payment plans may be available — <a href="${pg.rel}financing/">see financing options</a>.</p>` : ""}
@@ -718,6 +721,20 @@ ${dock}
     if (!ids.length) return "";
     return `<section class="svc-gal wrap ${cls}" data-lightbox>${eyebrow("In pictures")}<div class="svc-gal-grid n${Math.min(ids.length, 6)}" data-reveal="stagger">${ids.slice(0, 6).map(id => `<figure data-tilt>${imgTag(p, pg, id, { sizes: "(min-width:900px) 33vw, 50vw" })}</figure>`).join("")}</div></section>`;
   }
+  function svcBody(p, pg, s) {
+    const ps = paraList(s.body || "");
+    if (ps.length >= 2) return ps;
+    const b = p.business, city = pg.area ? pg.area.name : b.address.city, n = s.name.toLowerCase(), bl = lines(s.bullets);
+    const out = ps.length ? [...ps] : (s.short ? [s.short] : []);
+    const openDays = (b.hours || []).filter(h => h.open && h.close);
+    const p2 = hashPick([
+      `At ${b.name}${bl.length ? `, ${n} includes ${bl.slice(0, 3).map(x => x.toLowerCase()).join(", ")}${bl.length > 3 ? " and more" : ""}` : `, we take time with ${n}`}. ${pg.area ? `Families from ${city} reach our ${b.address.city} office in a short drive. ` : ""}We explain what we find in plain words and agree the next step with you before anything begins.`,
+      `${pg.area ? `If you are coming from ${city}, ` : ""}${b.name} is on ${b.address.street} in ${b.address.city}${openDays.length ? `, open ${openDays.length} days a week` : ""}. ${bl.length ? `Our ${n} covers ${bl.slice(0, 3).map(x => x.toLowerCase()).join(", ")}, ` : "We "}${bl.length ? "and you" : "and you"} always leave knowing what was done, what it cost and when to come back.`,
+    ], s.slug + (pg.area ? pg.area.slug : ""));
+    const p3 = `To book ${n}${pg.area ? ` from ${city}` : ""}, call ${b.phone || "us"} or send an appointment request online${p.financing.enabled ? "; flexible payment options are available" : ""}.${lines(p.usps)[0] ? ` ${lines(p.usps)[0].split(/:\s/)[0]}: ${lines(p.usps)[0].split(/:\s/).slice(1).join(": ") || ""}`.replace(/:\s*$/, ".") : ""}`;
+    out.push(p2); if (out.length < 3) out.push(p3);
+    return out;
+  }
   function svcCommon(p, pg, s) {
     const b = p.business, city = pg.area ? pg.area.name : b.address.city;
     const kw = lines(String(s.keywords || "").replace(/,/g, "\n"));
@@ -731,7 +748,7 @@ ${dock}
   }
   function serviceShowcase(p, pg) {
     const s = pg.service, c = svcCommon(p, pg, s);
-    const paras_ = paraList(s.body || s.short);
+    const paras_ = svcBody(p, pg, s);
     return [heroCinematic(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1, small: true }),
       crumbsHtml(p, pg),
       `<section class="svc-intro wrap"><div class="svc-intro-grid"><div data-reveal>${eyebrow("Overview")}${c.kwH2 ? `<h2 data-split>${esc(c.kwH2)}</h2>` : `<h2 data-split>${esc(s.name)}, explained</h2>`}${c.areaNote}${paras(paras_.slice(0, 2).join("\n\n"))}</div><div class="svc-intro-media" data-reveal="wipe"><div>${imgTag(p, pg, (s.gallery && s.gallery[0]) || s.image || s.id + 2, { sizes: "50vw", alt: s.name })}</div>${s.priceFrom ? `<span class="price-tag">From ${esc(s.priceFrom)}</span>` : ""}</div></div></section>`,
@@ -746,7 +763,7 @@ ${dock}
   }
   function serviceSteps(p, pg) {
     const s = pg.service, c = svcCommon(p, pg, s);
-    const paras_ = paraList(s.body || s.short);
+    const paras_ = svcBody(p, pg, s);
     const stepsHtml = c.bullets.length ? `<section class="svc-steps wrap"><div class="svc-steps-grid"><div class="svc-steps-side" data-reveal>${eyebrow("What to expect")}<h2 data-split>${esc(s.name)}, step by step</h2>${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}${p.financing.enabled ? `<p><a class="link-arrow" href="${pg.rel}financing/">Payment options →</a></p>` : ""}</div><ol class="step-list" data-reveal="stagger">${c.bullets.map((x, i) => `<li><span>${String(i + 1).padStart(2, "0")}</span><div><h3>${esc(x.split(/[:—–-]\s/)[0])}</h3>${x.includes(": ") ? `<p>${esc(x.split(": ").slice(1).join(": "))}</p>` : ""}</div></li>`).join("")}</ol></div></section>` : "";
     return [heroSplit(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1 }),
       crumbsHtml(p, pg),
@@ -756,7 +773,7 @@ ${dock}
       c.alsoServing, reviewsSection(p, pg, 4), ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
   }
   function serviceEditorial(p, pg) {
-    const s = pg.service, c = svcCommon(p, pg, s), ps = paraList(s.body || s.short);
+    const s = pg.service, c = svcCommon(p, pg, s), ps = svcBody(p, pg, s);
     const quote = p.reviews.find(r => new RegExp(s.name.split(" ")[0], "i").test(r.text)) || p.reviews[0];
     const toc = [["overview", "Overview"], c.bullets.length ? ["included", "What’s included"] : null, (s.gallery || []).length ? ["pictures", "In pictures"] : null, ["faq", "Questions"], ["book", "Book"]].filter(Boolean);
     return [`<section class="hero hero-editorial hero-svc-ed" data-scroll><div class="hero-inner">${eyebrow(pg.area ? `${s.name} · ${pg.area.name}` : "Service")}<h1 data-split>${esc(s.name)} in <em>${esc(c.city)}</em></h1><div class="hero-ed-row"><p class="lead" data-reveal>${esc(s.short)}</p>${ctaButtons(p, pg)}</div></div><div class="ed-hero-img" data-reveal="wipe"><div>${imgTag(p, pg, s.image || s.id + 1, { sizes: "100vw", eager: true, alt: "" })}</div></div></section>`,
@@ -964,7 +981,7 @@ html.nav-open .nav-overlay{opacity:1;visibility:visible}html.nav-open .site-head
 .crumbs{width:min(var(--wrap),calc(100% - 2rem));margin:1.2rem auto -2rem;font-size:.85rem;color:var(--muted)}.crumbs ol{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem;padding:0;margin:0}.crumbs li+li::before{content:"/";margin-right:.4rem;opacity:.5}.crumbs a{text-decoration:none}
 /* manifesto + stats */
 .manifesto{text-align:center}.scrub{font:400 clamp(1.4rem,3vw,2.5rem)/1.3 var(--font-d);max-width:28ch;margin-inline:auto;letter-spacing:-.01em}
-.stats{padding-block:0}.stats ul{list-style:none;margin:0;padding:2.5rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1.5rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.stats strong{display:block;font:600 clamp(2.4rem,5vw,4rem)/1 var(--font-d);color:var(--primary)}.stats span{color:var(--muted);font-size:.9rem}
+.stats{padding-block:0}.stats ul{list-style:none;margin:0;padding:2.5rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1.5rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}@media(min-width:900px){.stats ul{text-align:left}}.stats strong{display:block;font:600 clamp(2.4rem,5vw,4rem)/1 var(--font-d);color:var(--primary)}.stats span{color:var(--muted);font-size:.9rem}
 /* services */
 .svc-card{position:relative;display:flex;flex-direction:column;gap:.6rem;padding:1.2rem;background:var(--paper-2);border-radius:var(--radius);text-decoration:none;overflow:hidden;transition:box-shadow .5s var(--ease)}.svc-card:hover{box-shadow:0 30px 60px -30px rgba(0,0,0,.4)}
 .svc-media{aspect-ratio:4/3;border-radius:calc(var(--radius) - 6px);overflow:hidden}.svc-media img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-card:hover .svc-media img{transform:scale(1.06)}
@@ -972,7 +989,7 @@ html.nav-open .nav-overlay{opacity:1;visibility:visible}html.nav-open .site-head
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.4rem}
 .hscroll{position:relative}.hscroll-track{padding:1rem clamp(1rem,4vw,4rem) 2rem}.hscroll-track>*{width:min(78vw,420px)}.hscroll-bar{height:3px;background:var(--accent);margin:0 clamp(1rem,4vw,4rem)}
 /* split / process / hover list */
-.split{display:grid;gap:2.5rem;align-items:center}@media(min-width:900px){.split{grid-template-columns:1.1fr 1fr;gap:5rem}}.split-media img{width:100%;border-radius:var(--radius);aspect-ratio:4/5;object-fit:cover}
+.split{display:grid;gap:2.5rem;align-items:center}.split-media>div{border-radius:var(--radius);overflow:hidden}@media(min-width:900px){.split{grid-template-columns:1.1fr 1fr;gap:5rem}}.split-media img{width:100%;border-radius:var(--radius);aspect-ratio:4/5;object-fit:cover}
 .stack{list-style:none;padding:0;margin:0;display:grid;gap:1.2rem}.stack li{position:sticky;top:calc(var(--header-h,80px) + 1rem);background:var(--primary);color:#fff;padding:2.5rem;border-radius:var(--radius);min-height:260px}.stack li:nth-child(2){top:calc(var(--header-h,80px) + 2.5rem);background:color-mix(in srgb,var(--primary) 80%,#000)}.stack li:nth-child(3){top:calc(var(--header-h,80px) + 4rem);background:color-mix(in srgb,var(--primary) 60%,#000)}.stack span{color:var(--accent);font-weight:600;letter-spacing:.15em}.stack h3{font-size:1.9rem;margin:.4rem 0}
 .hover-list ul{list-style:none;margin:0;padding:0}.hover-list li{border-top:1px solid var(--line)}.hover-list li:last-child{border-bottom:1px solid var(--line)}.hover-list a{display:flex;align-items:baseline;justify-content:space-between;gap:2rem;padding:1.4rem 0;text-decoration:none;transition:padding .4s var(--ease)}.hover-list a:hover{padding-left:1rem;color:var(--primary)}.hover-list a span{font:600 clamp(1.4rem,3vw,2.4rem)/1.1 var(--font-d)}.hover-list a small{color:var(--muted);text-align:right;max-width:40ch}
 /* reviews */
@@ -1029,7 +1046,7 @@ ${featureCss(p)}
 ${f.underline ? `h1 em,h2 em,h1 em .w>span,h2 em .w>span{background:none!important;-webkit-text-fill-color:currentColor;color:var(--accent);animation:none}h1 em{position:relative;display:inline-block}h1 em::after{content:"";position:absolute;left:0;right:0;bottom:-.06em;height:.2em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20' preserveAspectRatio='none'%3E%3Cpath d='M2 14 C 60 2, 140 22, 198 8' fill='none' stroke='%23${p.brand.accent.replace("#", "")}' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/100% 100%;opacity:.9;transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease) .9s}.js [data-split].is-in em::after,html:not(.js) h1 em::after{transform:scaleX(1)}` : ""}
 .process-pin{display:grid;gap:2.5rem}@media(min-width:960px){.process-pin{grid-template-columns:1fr 1fr;gap:5rem;align-items:start}.process-media{position:sticky;top:calc(var(--header-h,80px) + 2rem)}}.process-media>div{position:relative;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;background:var(--paper-2)}.process-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity .8s var(--ease),transform 1.4s var(--ease)}.process-media img.is-active{opacity:1;transform:none}
 .process-steps ol{list-style:none;padding:0;margin:0}.process-steps li{padding:2.2rem 0 2.2rem 4.2rem;position:relative;border-top:1px solid var(--line);opacity:.4;transition:opacity .5s}.process-steps li.is-active{opacity:1}.process-steps li span{position:absolute;left:0;top:2.3rem;font:600 .8rem var(--font-b);letter-spacing:.15em;color:var(--accent);width:44px;height:44px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;transition:.4s}.process-steps li.is-active span{background:var(--primary);color:#fff;border-color:var(--primary)}.process-steps h3{font-size:1.7rem;margin:0 0 .4rem}.process-steps p{color:var(--muted);max-width:44ch;margin:0}@media(min-width:960px){.process-steps li{padding-block:4rem;min-height:40vh}}
-.pbreak{height:clamp(260px,50vh,560px);overflow:hidden;position:relative}.pbreak-img{position:absolute;inset:-25% 0}.pbreak-img img{width:100%;height:100%;object-fit:cover;transform:translateY(calc((var(--progress,.5) - .5)*-18%))}
+.pbreak{height:clamp(240px,42vh,480px);overflow:hidden;position:relative;margin:1rem 0}.pbreak-img{position:absolute;inset:-25% 0}.pbreak-img img{width:100%;height:100%;object-fit:cover;transform:translateY(calc((var(--progress,.5) - .5)*-18%))}
 .ba-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}.ba-item{margin:0;overflow:hidden;border-radius:var(--radius)}.ba-frame{position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;--ba:50%;cursor:ew-resize;user-select:none}.ba-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.ba-after{position:absolute;inset:0;clip-path:inset(0 0 0 var(--ba))}.ba-frame input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:ew-resize;z-index:2}.ba-handle{position:absolute;top:0;bottom:0;left:var(--ba);width:2px;background:#fff;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.2);z-index:1}.ba-handle::after{content:"⟷";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font-size:1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.35)}.ba-tag{position:absolute;top:1rem;padding:.3rem .7rem;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font:600 .7rem/1 var(--font-b);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;z-index:1}.ba-tag-l{left:1rem}.ba-tag-r{right:1rem}.ba-item figcaption{padding:.7rem 0;color:var(--muted);font-size:.9rem}
 .quiz-card{padding:clamp(1.6rem,4vw,3.5rem);border-radius:calc(var(--radius) + 8px);background:var(--ink);color:var(--paper);min-height:360px;display:grid;align-items:center}.quiz-card h2{font-size:clamp(1.7rem,3.4vw,2.6rem);margin:.2rem 0 .6rem}.quiz-card p{color:color-mix(in srgb,var(--paper) 70%,transparent)}.quiz-card .eyebrow{color:var(--accent)}.quiz-opts{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.2rem}.quiz-opts button{padding:1rem 1.4rem;border-radius:999px;border:1px solid color-mix(in srgb,var(--paper) 30%,transparent);background:color-mix(in srgb,var(--paper) 6%,transparent);color:inherit;font:600 .95rem var(--font-b);cursor:pointer;transition:.3s}.quiz-opts button:hover{background:var(--accent);color:#111;border-color:var(--accent);transform:translateY(-2px)}.quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.quiz-grid button{text-align:left;border-radius:14px}.quiz-card.is-flip>*{animation:qin .4s var(--ease)}@keyframes qin{from{opacity:0;transform:translateY(10px)}}.quiz-result .btn-row{margin-top:1rem}.quiz-card .link-arrow{background:none;border:0;border-bottom:1px solid var(--accent);color:var(--accent);cursor:pointer;font:inherit;padding:0}.quiz-urgent h2{color:var(--accent)}
 .rv-head{display:flex;align-items:flex-end;gap:2rem;margin-bottom:2rem}.rv-ring{--pct:100;flex:none;width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;background:conic-gradient(var(--accent) calc(var(--pct)*1%),color-mix(in srgb,currentColor 15%,transparent) 0);position:relative}.rv-ring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--ink)}.layout-editorial .rv-ring::before,.layout-collage .rv-ring::before{background:var(--paper-2)}.layout-split .rv-ring::before{background:var(--primary)}.rv-ring strong,.rv-ring span{position:relative}.rv-ring strong{display:block;font:600 2rem/1 var(--font-d)}.rv-ring span{font-size:.7rem;opacity:.7}

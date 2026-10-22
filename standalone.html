@@ -91,7 +91,12 @@ details>:not(summary){margin-top:.5rem}
 .log{font:400 .8rem/1.5 var(--mono);background:#111;color:#e5e1d8;padding:1rem;border-radius:10px;max-height:260px;overflow:auto;white-space:pre-wrap;margin:1rem 0}
 .preview{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:1rem 0;background:var(--panel)}
 .preview-bar{display:flex;gap:.5rem;padding:.5rem;border-bottom:1px solid var(--line);align-items:center}.preview-bar select{margin:0;flex:1;width:auto}
-.preview iframe{width:100%;height:70vh;border:0;background:#fff;display:block;margin:0 auto;transition:width .3s}.preview.is-mobile iframe{width:390px}
+.preview-bar{flex-wrap:wrap}.devices{display:flex;gap:.25rem}.dev.is-on{background:var(--brand);color:var(--bg);border-color:var(--brand)}
+.preview-stage{background:#d9d4c8;padding:0;display:grid;place-items:center;overflow:auto}
+.preview iframe{width:100%;height:78vh;border:0;background:#fff;display:block;margin:0 auto;transition:width .3s,height .3s;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.preview.dev-laptop iframe{width:1280px;max-width:100%}.preview.dev-tablet iframe{width:820px;height:1180px;max-height:78vh;border-radius:18px;margin:1rem auto}.preview.dev-phone iframe{width:390px;height:844px;max-height:78vh;border-radius:36px;margin:1rem auto;border:10px solid #111}
+.preview.dev-tablet.is-rot iframe{width:1180px;height:820px;max-width:100%}.preview.dev-phone.is-rot iframe{width:844px;height:390px;max-width:100%}
+.preview:fullscreen{background:var(--bg);display:flex;flex-direction:column}.preview:fullscreen .preview-stage{flex:1}.preview:fullscreen iframe{height:100%;max-height:none}
 dialog{border:1px solid var(--line);border-radius:14px;padding:1.5rem;max-width:560px;width:calc(100% - 2rem);background:var(--panel);color:var(--ink)}
 dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif);margin:0 0 .3rem}
 .toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%);background:var(--brand);color:var(--bg);padding:.7rem 1.2rem;border-radius:999px;z-index:99;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3)}
@@ -112,6 +117,10 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
 .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1rem}
 .score{padding:1rem;border-radius:12px;background:var(--panel);border:1px solid var(--line);text-align:center}.score strong{display:block;font:500 2.4rem/1 var(--serif)}.score span{font-size:.8rem;color:var(--muted)}.score.g strong{color:var(--ok)}.score.y strong{color:var(--gold)}.score.r strong{color:var(--err)}
 #score-items{columns:2;column-gap:2rem;font-size:.85rem}#score-items div{break-inside:avoid;padding:.3rem 0;border-bottom:1px solid var(--line)}#score-items .no{color:var(--err)}#score-items small{display:block;color:var(--muted)}
+
+.imgpick{margin-bottom:1rem;font-size:.9rem;font-weight:500}.imgpick-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}.imgpick-item{position:relative;margin:0;cursor:pointer}.imgpick-item input{position:absolute;opacity:0}.imgpick-item img{width:72px;height:54px;object-fit:cover;border-radius:6px;border:3px solid transparent;display:block}.imgpick-item:has(input:checked) img{border-color:var(--ok)}
+
+.lowres{color:var(--err);font-weight:600}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -247,6 +256,11 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
         <select id="font-preset"><option value="">Font pairing…</option></select>
         <button class="ghost" id="btn-random" type="button">🎲 Randomize look</button>
       </div>
+      <h2>Home page sections</h2>
+      <p class="hint">Untick anything you don't want on this client's home page. Order follows the layout.</p>
+      <div class="toggles">
+        <label><input type="checkbox" data-bind="home.ticker"> Service ticker</label><label><input type="checkbox" data-bind="home.manifesto"> Manifesto line</label><label><input type="checkbox" data-bind="home.stats"> Stats band</label><label><input type="checkbox" data-bind="home.usps"> Why choose us</label><label><input type="checkbox" data-bind="home.bento"> Bento grid</label><label><input type="checkbox" data-bind="home.services"> Services</label><label><input type="checkbox" data-bind="home.about"> About split</label><label><input type="checkbox" data-bind="home.process"> How it works</label><label><input type="checkbox" data-bind="home.parallax"> Parallax photo break</label><label><input type="checkbox" data-bind="home.beforeAfter"> Before / after</label><label><input type="checkbox" data-bind="home.reviews"> Reviews</label><label><input type="checkbox" data-bind="home.quiz"> Quiz</label><label><input type="checkbox" data-bind="home.gallery"> Gallery strip</label><label><input type="checkbox" data-bind="home.team"> Team preview</label><label><input type="checkbox" data-bind="home.blog"> Latest articles</label><label><input type="checkbox" data-bind="home.areas"> Service areas</label><label><input type="checkbox" data-bind="home.faq"> FAQ</label><label><input type="checkbox" data-bind="home.contact"> Visit / hours / map</label>
+      </div>
       <h2>Hero video (optional)</h2>
       <p class="hint">If the client has a short clip (MP4 or WebM, under ~8 MB, 10–20 s, no sound needed) it plays silently behind the Cinematic and Bold heroes with the first photo as poster. Skipped on reduced-motion and data-saver.</p>
       <label>Video file<input type="file" id="video-file" accept="video/mp4,video/webm"></label>
@@ -295,7 +309,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
     <!-- 3 IMAGES -->
     <section data-panel="images">
       <h1>Photos</h1>
-      <p class="hint">Upload at least <strong>10</strong> real photos (team, premises, work, details). They are resized to 1600px and 800px JPEG in your browser and never uploaded anywhere until you deploy. Add a short alt description to each: it matters for SEO and accessibility. The first image is the home hero.</p>
+      <p class="hint">Upload at least <strong>10</strong> real photos (team, premises, work, details). Use originals of at least <strong>1600px wide</strong> (phone photos are fine; images saved from an old website usually aren't — they come out blurry). They are resized to 1600px and 800px JPEG in your browser and never uploaded anywhere until you deploy. Add a short alt description to each: it matters for SEO and accessibility. The first image is the home hero.</p>
       <div class="drop" id="drop"><input type="file" id="img-files" accept="image/*" multiple><p><strong>Drop photos here</strong> or click to choose · <span id="img-count">0</span>/10 minimum</p></div>
       <div class="img-grid" id="img-grid"></div>
       <details class="stock" open><summary>Before / after pairs (optional)</summary>
@@ -319,6 +333,12 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
     <section data-panel="services">
       <h1>Services</h1>
       <p class="hint">Each service becomes its own page, and each service × service area becomes another page: 8 services × 10 areas = 80 location pages plus the core pages. Write each description in your own words; optional AI drafting (step 7) can help you expand bullet points.</p>
+      <h2>Service page design</h2>
+      <p class="hint">Three page designs are built in. <strong>Alternate</strong> rotates them across the site so service pages don't all look identical; you can also pin one per service on its card.</p>
+      <div class="grid2">
+        <label>Service pages<select data-bind="serviceLayout"><option value="alternate">Alternate — classic → showcase → steps → editorial</option><option value="classic">Classic — two columns, sticky booking card</option><option value="showcase">Showcase — photo intro, inclusion cards, gallery, booking band</option><option value="steps">Steps — split hero, step-by-step, FAQ beside booking</option><option value="editorial">Editorial — magazine long-form, table of contents, pull quote</option></select></label>
+        <label>Services index page<select data-bind="servicesIndex"><option value="grid">Card grid</option><option value="rows">Editorial rows with photos</option><option value="tabs">Tabbed explorer</option><option value="bento">Photo bento wall</option></select></label>
+      </div>
       <div class="toolbar"><button class="primary" id="svc-add">+ Add service</button><button class="ghost" id="svc-bulk">Paste a list</button><span class="muted" id="svc-count"></span></div>
       <div id="svc-list" class="cards"></div>
       <div class="nav-row"><button class="ghost" data-next="images">← Back</button><button class="primary" data-next="areas">Next: Service areas →</button></div>
@@ -406,6 +426,16 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
         <label>Provider<select data-bind="forms.provider"><option value="formspree">Formspree (recommended)</option><option value="netlify">Netlify Forms (if hosted on Netlify)</option><option value="mailto">Email link (fallback)</option></select></label>
         <label>Formspree endpoint<input data-bind="forms.endpoint" placeholder="https://formspree.io/f/xxxxxxxx"></label>
       </div>
+      <h2>Security</h2>
+      <p class="hint">The generated site is static — no server code, database, CMS or login exists, which removes the attacks that hit WordPress sites. These add the remaining protections.</p>
+      <div class="toggles">
+        <label><input type="checkbox" data-bind="security.csp"> Content-Security-Policy + nosniff + referrer + permissions policies</label>
+        <label><input type="checkbox" data-bind="security.honeypot"> Form honeypot</label>
+        <label><input type="checkbox" data-bind="security.timetrap"> Form timing trap (blocks bots that submit instantly)</label>
+        <label><input type="checkbox" data-bind="security.hideEmail"> Obfuscate email against scrapers</label>
+        <label><input type="checkbox" data-bind="security.securityTxt"> /.well-known/security.txt</label>
+        <label><input type="checkbox" data-bind="security.headersFile"> HSTS / X-Frame-Options header files (_headers, vercel.json) + SECURITY.md</label>
+      </div>
       <h2>AI copy assist (optional)</h2>
       <p class="hint">Paste your own Anthropic API key to draft service descriptions, FAQs and blog posts from your notes. The key stays in this browser only. Everything drafted is marked for you to review: AI must not invent facts, prices or reviews.</p>
       <div class="grid2">
@@ -437,8 +467,18 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
       <div id="build-log" class="log" hidden></div>
 
       <div class="preview" id="preview" hidden>
-        <div class="preview-bar"><select id="preview-page"></select><button class="ghost" id="preview-mobile">Phone</button><button class="ghost" id="preview-close">Close</button></div>
-        <iframe id="preview-frame" title="Site preview"></iframe>
+        <div class="preview-bar"><select id="preview-page"></select>
+          <div class="devices" role="group" aria-label="Preview size">
+            <button class="ghost dev is-on" data-dev="desktop" title="Desktop (full width)">🖥 Desktop</button>
+            <button class="ghost dev" data-dev="laptop" title="Laptop 1280px">💻 Laptop</button>
+            <button class="ghost dev" data-dev="tablet" title="Tablet 820px">▭ Tablet</button>
+            <button class="ghost dev" data-dev="phone" title="Phone 390px">📱 Phone</button>
+          </div>
+          <button class="ghost" id="preview-rotate" title="Rotate tablet/phone">⟳</button>
+          <button class="ghost" id="preview-full">⛶ Full screen</button>
+          <button class="ghost" id="preview-tab">Open in new tab</button>
+          <button class="ghost" id="preview-close">Close</button></div>
+        <div class="preview-stage"><iframe id="preview-frame" title="Site preview"></iframe></div>
       </div>
 
       <h2>Publish to GitHub Pages</h2>
@@ -500,6 +540,10 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
     credentials: "",
     languages: "",
     voice: "warm",
+    serviceLayout: "alternate",
+    servicesIndex: "grid",
+    home: { ticker: true, manifesto: true, stats: true, usps: true, bento: true, services: true, about: true, process: true, beforeAfter: true, reviews: true, quiz: true, gallery: true, areas: true, faq: true, contact: true, parallax: true, team: false, blog: false },
+    security: { csp: true, honeypot: true, timetrap: true, securityTxt: true, noindexForms: false, hideEmail: true, headersFile: true },
     headlines: { hero: "", services: "", about: "", process: "", reviews: "", cta: "" },
     services: [],
     areas: [],
@@ -537,7 +581,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
   function normalize(p) {
     p = merge(DEFAULT, p || {});
     p.services = (p.services || []).filter(s => s && s.name).map((s, i) => ({
-      ...s, slug: s.slug || slug(s.name), image: s.image || "", bullets: s.bullets || "", faqs: s.faqs || "", id: i
+      ...s, slug: s.slug || slug(s.name), image: s.image || "", gallery: Array.isArray(s.gallery) ? s.gallery : [], variant: s.variant || "", bullets: s.bullets || "", faqs: s.faqs || "", id: i
     }));
     p.areas = (p.areas || []).filter(a => a && a.name).map(a => ({ ...a, slug: a.slug || slug(a.name) }));
     p.posts = (p.posts || []).filter(x => x && x.title).map(x => ({ ...x, slug: x.slug || slug(x.title) }));
@@ -605,12 +649,15 @@ dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{font:500 1.3rem var(--serif
   }
 
   /* ---------- images ---------- */
+  const bigImgs = (p) => p.images.filter(i => (i.w || 0) >= 1200);
+  function wideId(p, idx, fallback) { const b = bigImgs(p); return b.length ? b[idx % b.length].id : fallback; }
   function imgTag(p, pg, id, opts = {}) {
     const im = p.images.find(i => i.id === id) || (typeof id === "number" ? pick(p.images, id) : null) || pick(p.images, 0);
     if (!im) return `<div class="ph" aria-hidden="true"></div>`;
-    const base = pg.rel + "assets/img/" + im.id;
+    const base = pg.rel + "assets/img/" + im.id, w = im.w || 1600;
     const sizes = opts.sizes || "(min-width: 900px) 50vw, 100vw";
-    return `<img src="${base}.jpg" srcset="${base}-800.jpg 800w, ${base}.jpg 1600w" sizes="${sizes}" width="${im.w || 1600}" height="${im.h || 1067}" alt="${attr(opts.alt || im.alt || "")}" loading="${opts.eager ? "eager" : "lazy"}" decoding="async"${opts.extra || ""}>`;
+    const srcset = w > 900 ? `${base}-800.jpg 800w, ${base}.jpg ${w}w` : `${base}.jpg ${w}w`;
+    return `<img src="${base}.jpg" srcset="${srcset}" sizes="${sizes}"${opts.eager ? ' fetchpriority="high"' : ""} width="${im.w || 1600}" height="${im.h || 1067}" alt="${attr(opts.alt || im.alt || "")}" loading="${opts.eager ? "eager" : "lazy"}" decoding="async"${opts.extra || ""}>`;
   }
   function logoTag(p, pg, cls) {
     if (p.brand.logo) return `<img src="${pg.rel}assets/logo.${p.brand.logoExt || "png"}" alt="${attr(p.business.name)} logo" class="${cls}" width="${p.brand.logoW || 160}" height="${p.brand.logoH || 48}" loading="eager" decoding="async">`;
@@ -724,7 +771,7 @@ ${dock}
       ${logoTag(p, pg, "ft-logo")}
       <p>${esc(b.tagline || b.description.slice(0, 160))}</p>
       <address>${esc(b.address.street)}<br>${esc([b.address.city, b.address.state].filter(Boolean).join(", "))} ${esc(b.address.zip)}</address>
-      ${b.phone ? `<a href="${telHref(b.phone)}">${esc(b.phone)}</a><br>` : ""}${b.email ? `<a href="mailto:${attr(b.email)}">${esc(b.email)}</a>` : ""}
+      ${b.phone ? `<a href="${telHref(b.phone)}">${esc(b.phone)}</a><br>` : ""}${b.email ? (p.security.hideEmail ? `<a href="#" data-em="${attr(b.email.split("").reverse().join(""))}">${esc(b.email.replace("@", " [at] "))}</a>` : `<a href="mailto:${attr(b.email)}">${esc(b.email)}</a>`) : ""}
       <p data-open-status class="open-status"></p>
       <div class="social">${social}</div>
     </div>
@@ -873,8 +920,8 @@ ${dock}
 </div></section>`;
   }
   function parallaxBreak(p, pg, idx) {
-    if (!p.brand.fx.parallax || !p.images[idx]) return "";
-    return `<div class="pbreak" data-scroll><div class="pbreak-img">${imgTag(p, pg, p.images[idx].id, { sizes: "100vw", alt: "" })}</div></div>`;
+    if (!p.brand.fx.parallax || bigImgs(p).length < 2) return "";
+    return `<div class="pbreak" data-scroll><div class="pbreak-img">${imgTag(p, pg, wideId(p, idx, 0), { sizes: "100vw", alt: "" })}</div></div>`;
   }
   function tickerSection(p) {
     if (!p.brand.fx.ticker || p.services.length < 3) return "";
@@ -935,7 +982,7 @@ ${dock}
 </section>`;
   }
   function ctaBand(p, pg, text) {
-    return `<section class="cta-band" data-spotlight data-scroll><div class="cta-bg">${imgTag(p, pg, p.images.length > 2 ? p.images[p.images.length - 1].id : 0, { sizes: "100vw", alt: "" })}</div><div class="wrap"><h2 data-split>${text}</h2><p class="cta-sub">${copy(p, "ctaSub")}</p><div class="btn-row"><a class="btn btn-light" data-magnetic href="${pg.rel}appointment/">${copy(p, "book")}</a>${p.business.phone ? `<a class="btn btn-ghost" href="${telHref(p.business.phone)}">${esc(p.business.phone)}</a>` : ""}</div></div></section>`;
+    return `<section class="cta-band" data-spotlight data-scroll><div class="cta-bg">${imgTag(p, pg, wideId(p, 3, p.images.length > 2 ? p.images[p.images.length - 1].id : 0), { sizes: "100vw", alt: "" })}</div><div class="wrap"><h2 data-split>${text}</h2><p class="cta-sub">${copy(p, "ctaSub")}</p><div class="btn-row"><a class="btn btn-light" data-magnetic href="${pg.rel}appointment/">${copy(p, "book")}</a>${p.business.phone ? `<a class="btn btn-ghost" href="${telHref(p.business.phone)}">${esc(p.business.phone)}</a>` : ""}</div></div></section>`;
   }
   function areasList(p, pg, serviceSlug) {
     if (!p.areas.length) return "";
@@ -974,7 +1021,7 @@ ${dock}
   <input type="hidden" name="_subject" value="${attr((isAppt ? "Appointment request" : "Contact") + " — " + p.business.name)}">
   <input type="hidden" name="_next" value="${attr((p.seo.siteUrl || "").replace(/\/+$/, "") + "/thank-you/")}">
   ${netlify ? `<input type="hidden" name="form-name" value="${kind}">` : ""}
-  <p class="hp"><label>Leave this field empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>
+  ${p.security.honeypot !== false ? `<p class="hp" aria-hidden="true"><label>Leave this field empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>` : ""}${p.security.timetrap !== false ? `<input type="hidden" name="_t" data-timetrap value="">` : ""}
   <div class="row2"><label class="fl"><input name="name" required autocomplete="name" placeholder=" "><span>Full name</span></label><label class="fl"><input name="phone" type="tel" required autocomplete="tel" placeholder=" "><span>Phone</span></label></div>
   <label class="fl"><input name="email" type="email" required autocomplete="email" placeholder=" "><span>Email</span></label>
   ${isAppt ? `<div class="row2"><label>Service<select name="service"><option value="">Select a service</option>${svcOpts}<option>Not sure yet</option></select></label><label>Preferred date<input name="date" type="date"></label></div>
@@ -993,7 +1040,7 @@ ${dock}
     if (p.services.length) items.push({ n: p.services.length, s: "", l: "services offered" });
     if (p.reviews.length) items.push({ n: p.reviews.length, s: "+", l: "client reviews" });
     if (p.areas.length) items.push({ n: p.areas.length, s: "", l: "communities served" });
-    if (!items.length) return "";
+    if (items.length < 3) return "";
     return `<section class="stats wrap"><ul data-reveal="stagger">${items.map(i => `<li><strong data-count="${i.n}" data-suffix="${i.s}">${i.n}${i.s}</strong><span>${esc(i.l)}</span></li>`).join("")}</ul></section>`;
   }
 
@@ -1015,16 +1062,19 @@ ${dock}
       const gallery = p.images.length >= 4 ? `<section class="gallery-strip" data-lightbox><div class="wrap">${eyebrow("Gallery")}<h2 data-split>A look inside</h2></div><div class="marquee" data-marquee data-marquee-scroll><div>${p.images.slice(0, 8).map((im, i) => `<figure>${imgTag(p, pg, im.id, { sizes: "40vw" })}</figure>`).join("")}</div></div></section>` : "";
       const hoverList = p.services.length ? `<section class="hover-list wrap">${eyebrow("Explore")}<h2 data-split>Find the right service</h2><ul data-hover-reveal>${p.services.slice(0, 8).map((s, i) => `<li><a href="${pg.rel}services/${s.slug}/"><span>${esc(s.name)}</span><small>${esc(s.short)}</small></a>${imgTag(p, pg, s.image || i + 1, { extra: ' data-hover-media', sizes: "320px", alt: "" })}</li>`).join("")}</ul></section>` : "";
       const kin = (p.brand.fx.kinetic && p.areas.length >= 2) ? `<em class="kinetic" data-kinetic="${attr(JSON.stringify([city, ...p.areas.slice(0, 5).map(a => a.name)]))}">${esc(city)}</em>` : `<em>${esc(city)}</em>`;
-      const H = hero(p, pg, { eyebrowText: `${city}, ${b.address.state}`, h1: copy(p, "hero", esc(primaryKeyword(p)), esc(city)).replace(`<em>${esc(city)}</em>`, kin), lead: esc(b.tagline || b.description.split(/\n/)[0].slice(0, 180)), imgId: 0 });
+      const H = hero(p, pg, { eyebrowText: `${city}, ${b.address.state}`, h1: copy(p, "hero", esc(primaryKeyword(p)), esc(city)).replace(`<em>${esc(city)}</em>`, kin), lead: esc(b.tagline || b.description.split(/\n/)[0].slice(0, 180)), imgId: wideId(p, 0, 0) });
       const cards = servicesGrid(p, pg, p.services.slice(0, 8), { hscroll: true, title: copy(p, "services", esc(city)) });
       const grid = servicesGrid(p, pg, p.services.slice(0, 9), { title: copy(p, "services", esc(city)) });
       const L = p.brand.layout || "cinematic", cta = ctaBand(p, pg, copy(p, "cta", city));
+      const hm = p.home || {}, on = (k, html) => hm[k] === false ? "" : html;
+      const teamSec = (hm.team && p.team.length) ? `<section class="team wrap">${eyebrow("Team")}<h2 data-split>Meet the team</h2><div class="team-grid" data-reveal="stagger">${p.team.slice(0, 4).map(t => `<article class="member" data-tilt>${t.image ? imgTag(p, pg, t.image, { sizes: "300px", alt: t.name }) : ""}<h3>${esc(t.name)}</h3><p class="role">${esc(t.role)}</p></article>`).join("")}</div><p><a class="link-arrow" href="${pg.rel}team/">Everyone on the team →</a></p></section>` : "";
+      const blogSec = (hm.blog && p.posts.length) ? `<section class="wrap post-list-home">${eyebrow("From the blog")}<h2 data-split>Advice worth reading</h2><div class="post-list" data-reveal="stagger">${p.posts.slice(0, 3).map(x => `<a class="post-card" data-tilt href="${pg.rel}blog/${x.slug}/"><time>${esc(x.date || "")}</time><h3>${esc(x.title)}</h3><p>${esc(x.excerpt || String(x.body || "").slice(0, 120))}</p></a>`).join("")}</div></section>` : "";
       const orders = {
-        cinematic: [H, tickerSection(p), manifesto, statsBand(p), uspSection(p, pg), bentoSection(p, pg), cards, parallaxBreak(p, pg, 5), about, process, beforeAfterSection(p, pg), reviewsSection(p, pg), quizSection(p, pg), gallery, areasList(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), contactBlock(p, pg), cta],
-        split: [H, statsBand(p), uspSection(p, pg), grid, about, parallaxBreak(p, pg, 6), reviewsSection(p, pg), beforeAfterSection(p, pg), bentoSection(p, pg), process, quizSection(p, pg), gallery, faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        editorial: [H, manifesto, hoverList, uspSection(p, pg), about, statsBand(p), parallaxBreak(p, pg, 7), reviewsSection(p, pg), beforeAfterSection(p, pg), process, quizSection(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        collage: [H, tickerSection(p), bentoSection(p, pg), cards, uspSection(p, pg), about, beforeAfterSection(p, pg), gallery, reviewsSection(p, pg), process, quizSection(p, pg), faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
-        bold: [H, statsBand(p), tickerSection(p), grid, uspSection(p, pg), bentoSection(p, pg), parallaxBreak(p, pg, 5), reviewsSection(p, pg), beforeAfterSection(p, pg), about, process, quizSection(p, pg), gallery, faqSection(p.faqs.slice(0, 6), copy(p, "faq")), areasList(p, pg), contactBlock(p, pg), cta],
+        cinematic: [H, on("ticker", tickerSection(p)), on("manifesto", manifesto), on("stats", statsBand(p)), on("usps", uspSection(p, pg)), on("bento", bentoSection(p, pg)), on("services", cards), on("parallax", parallaxBreak(p, pg, 5)), on("about", about), on("process", process), on("beforeAfter", beforeAfterSection(p, pg)), on("reviews", reviewsSection(p, pg)), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("areas", areasList(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        split: [H, on("stats", statsBand(p)), on("usps", uspSection(p, pg)), on("services", grid), on("about", about), on("parallax", parallaxBreak(p, pg, 6)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("bento", bentoSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        editorial: [H, on("manifesto", manifesto), on("services", hoverList), on("usps", uspSection(p, pg)), on("about", about), on("stats", statsBand(p)), on("parallax", parallaxBreak(p, pg, 7)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        collage: [H, on("ticker", tickerSection(p)), on("bento", bentoSection(p, pg)), on("services", cards), on("usps", uspSection(p, pg)), on("about", about), on("beforeAfter", beforeAfterSection(p, pg)), on("gallery", gallery), on("reviews", reviewsSection(p, pg)), on("process", process), on("quiz", quizSection(p, pg)), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
+        bold: [H, on("stats", statsBand(p)), on("ticker", tickerSection(p)), on("services", grid), on("usps", uspSection(p, pg)), on("bento", bentoSection(p, pg)), on("parallax", parallaxBreak(p, pg, 5)), on("reviews", reviewsSection(p, pg)), on("beforeAfter", beforeAfterSection(p, pg)), on("about", about), on("process", process), on("quiz", quizSection(p, pg)), on("gallery", gallery), on("faq", faqSection(p.faqs.slice(0, 6), copy(p, "faq"))), on("areas", areasList(p, pg)), on("contact", contactBlock(p, pg)), teamSec, blogSec, cta],
       };
       return (orders[L] || orders.cinematic).join("\n");
     },
@@ -1039,12 +1089,17 @@ ${dock}
     },
     services(p, pg) {
       return [hero(p, pg, { eyebrowText: "Services", h1: `Everything we do in <em>${esc(p.business.address.city)}</em>`, lead: "Explore each service to learn what to expect, who it helps, and how to get started.", imgId: 2, small: true }),
-        crumbsHtml(p, pg), servicesGrid(p, pg, p.services, { title: "All services", eyebrow: `${p.services.length} ${words(p.services.length, "service")}` }),
+        crumbsHtml(p, pg), servicesIndex(p, pg),
         p.financing.enabled ? `<section class="note-band wrap" data-reveal><p>Flexible payment options are available. <a href="${pg.rel}financing/">See financing →</a></p></section>` : "",
         faqSection(p.faqs.slice(0, 5)), ctaBand(p, pg, "Not sure where to start? Ask us.")].join("\n");
     },
     service(p, pg) {
       const s = pg.service, b = p.business, city = pg.area ? pg.area.name : b.address.city;
+      const V = ["classic", "showcase", "steps", "editorial"];
+      const variant = (s.variant && V.includes(s.variant)) ? s.variant : (V.includes(p.serviceLayout) ? p.serviceLayout : V[s.id % 4]);
+      if (variant === "showcase") return serviceShowcase(p, pg);
+      if (variant === "steps") return serviceSteps(p, pg);
+      if (variant === "editorial") return serviceEditorial(p, pg);
       const bullets = lines(s.bullets), faqs = parseFaqs(s.faqs);
       const others = p.services.filter(x => x.slug !== s.slug).slice(0, 3);
       const kw = lines(String(s.keywords || "").replace(/,/g, "\n"));
@@ -1053,15 +1108,16 @@ ${dock}
       return [hero(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1, small: true }),
         crumbsHtml(p, pg),
         `<section class="svc-detail wrap"><div class="svc-cols">
-  <article class="prose" data-reveal>${areaIntroHtml}${kwH2}${paras(s.body || s.short)}
+  <article class="prose" data-reveal>${areaIntroHtml}${kwH2}${paras(svcBody(p, pg, s).join("\n\n"))}
     ${bullets.length ? `<h2>What’s included</h2><ul class="checks" data-reveal="stagger">${bullets.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     ${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}
     ${p.financing.enabled ? `<p>Flexible payment plans may be available — <a href="${pg.rel}financing/">see financing options</a>.</p>` : ""}
   </article>
   <aside class="svc-aside" data-reveal>
-    <div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/">Request Appointment</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>
+    <div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>
     ${others.length ? `<div class="aside-links"><h3>Related services</h3><ul>${others.map(o => `<li><a href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}">${esc(o.name)}</a></li>`).join("")}</ul></div>` : ""}
   </aside></div></section>`,
+        svcGallery(p, pg, s),
         pg.area ? "" : areasList(p, pg, s.slug),
         pg.area ? `<section class="wrap areas">${eyebrow("Also serving")}<ul class="chip-list" data-reveal="stagger">${p.areas.filter(a => a.slug !== pg.area.slug).slice(0, 12).map(a => `<li><a href="${pg.rel}services/${s.slug}/${a.slug}/">${esc(s.name)} in ${esc(a.name)}</a></li>`).join("")}<li><a href="${pg.rel}services/${s.slug}/">${esc(s.name)} in ${esc(b.address.city)}</a></li></ul></section>` : "",
         faqSection(faqs.length ? faqs : p.faqs.slice(0, 4), `${s.name}: common questions`),
@@ -1151,6 +1207,81 @@ ${dock}
         `<section class="wrap sitemap-sec"><div class="sitemap-grid" data-reveal="stagger">${Object.entries(groups).map(([g, xs]) => `<div><h2>${esc(g.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()))}</h2><ul>${xs.map(x => `<li><a href="${pg.rel}${x.url}">${esc(x.title.split("|")[0].trim())}</a></li>`).join("")}</ul></div>`).join("")}</div></section>`].join("\n");
     },
   };
+  function servicesIndex(p, pg) {
+    const st = p.servicesIndex || "grid", items = p.services;
+    if (st === "rows") return `<section class="svc-rows wrap">${eyebrow(`${items.length} ${words(items.length, "service")}`)}<div data-reveal="stagger">${items.map((s, i) => `<a class="svc-row" href="${pg.rel}services/${s.slug}/"><span class="num">${String(i + 1).padStart(2, "0")}</span><div class="svc-row-media">${imgTag(p, pg, s.image || i + 1, { sizes: "260px", alt: s.name })}</div><div class="svc-row-text"><h2>${esc(s.name)}</h2><p>${esc(s.short)}</p>${lines(s.bullets).length ? `<ul class="chip-list mini">${lines(s.bullets).slice(0, 3).map(x => `<li><span>${esc(x)}</span></li>`).join("")}</ul>` : ""}</div><span class="arrow" aria-hidden="true">→</span></a>`).join("")}</div></section>`;
+    if (st === "tabs") return `<section class="svc-tabs wrap" data-tabs>${eyebrow("Choose a service")}<div class="tab-list" role="tablist">${items.map((s, i) => `<button role="tab" aria-selected="${i === 0}" data-tab="${i}">${esc(s.name)}</button>`).join("")}</div>${items.map((s, i) => `<div class="tab-panel" role="tabpanel" data-tab-panel="${i}"${i ? " hidden" : ""}><div class="tab-grid"><div class="tab-media">${imgTag(p, pg, s.image || i + 1, { sizes: "50vw", alt: s.name })}</div><div><h2>${esc(s.name)}</h2><p class="lead">${esc(s.short)}</p>${paras(paraList(s.body)[0] || "")}${lines(s.bullets).length ? `<ul class="checks">${lines(s.bullets).slice(0, 4).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="btn btn-primary" data-magnetic href="${pg.rel}services/${s.slug}/">About ${esc(s.name.toLowerCase())} →</a></div></div></div>`).join("")}</section>`;
+    if (st === "bento") return `<section class="wrap svc-bento">${eyebrow("All services")}<div class="svc-bento-grid" data-reveal="stagger">${items.map((s, i) => `<a class="svc-bcell ${i % 5 === 0 ? "big" : ""}" data-tilt href="${pg.rel}services/${s.slug}/"><div class="svc-bmedia">${imgTag(p, pg, s.image || i + 1, { sizes: "40vw", alt: s.name })}</div><div class="svc-btext"><h2>${esc(s.name)}</h2><p>${esc(s.short)}</p></div></a>`).join("")}</div></section>`;
+    return servicesGrid(p, pg, items, { title: "All services", eyebrow: `${items.length} ${words(items.length, "service")}` });
+  }
+  function svcGallery(p, pg, s, cls = "") {
+    const ids = (Array.isArray(s.gallery) ? s.gallery : []).filter(id => p.images.some(i => i.id === id));
+    if (!ids.length) return "";
+    return `<section class="svc-gal wrap ${cls}" data-lightbox>${eyebrow("In pictures")}<div class="svc-gal-grid n${Math.min(ids.length, 6)}" data-reveal="stagger">${ids.slice(0, 6).map(id => `<figure data-tilt>${imgTag(p, pg, id, { sizes: "(min-width:900px) 33vw, 50vw" })}</figure>`).join("")}</div></section>`;
+  }
+  function svcBody(p, pg, s) {
+    const ps = paraList(s.body || "");
+    if (ps.length >= 2) return ps;
+    const b = p.business, city = pg.area ? pg.area.name : b.address.city, n = s.name.toLowerCase(), bl = lines(s.bullets);
+    const out = ps.length ? [...ps] : (s.short ? [s.short] : []);
+    const openDays = (b.hours || []).filter(h => h.open && h.close);
+    const p2 = hashPick([
+      `At ${b.name}${bl.length ? `, ${n} includes ${bl.slice(0, 3).map(x => x.toLowerCase()).join(", ")}${bl.length > 3 ? " and more" : ""}` : `, we take time with ${n}`}. ${pg.area ? `Families from ${city} reach our ${b.address.city} office in a short drive. ` : ""}We explain what we find in plain words and agree the next step with you before anything begins.`,
+      `${pg.area ? `If you are coming from ${city}, ` : ""}${b.name} is on ${b.address.street} in ${b.address.city}${openDays.length ? `, open ${openDays.length} days a week` : ""}. ${bl.length ? `Our ${n} covers ${bl.slice(0, 3).map(x => x.toLowerCase()).join(", ")}, ` : "We "}${bl.length ? "and you" : "and you"} always leave knowing what was done, what it cost and when to come back.`,
+    ], s.slug + (pg.area ? pg.area.slug : ""));
+    const p3 = `To book ${n}${pg.area ? ` from ${city}` : ""}, call ${b.phone || "us"} or send an appointment request online${p.financing.enabled ? "; flexible payment options are available" : ""}.${lines(p.usps)[0] ? ` ${lines(p.usps)[0].split(/:\s/)[0]}: ${lines(p.usps)[0].split(/:\s/).slice(1).join(": ") || ""}`.replace(/:\s*$/, ".") : ""}`;
+    out.push(p2); if (out.length < 3) out.push(p3);
+    return out;
+  }
+  function svcCommon(p, pg, s) {
+    const b = p.business, city = pg.area ? pg.area.name : b.address.city;
+    const kw = lines(String(s.keywords || "").replace(/,/g, "\n"));
+    return {
+      b, city, kw, bullets: lines(s.bullets), faqs: parseFaqs(s.faqs), others: p.services.filter(x => x.slug !== s.slug).slice(0, 3),
+      areaNote: pg.area ? `<p class="area-note">${areaIntro(p, s, pg.area)}${b.mapLink ? ` <a href="${attr(b.mapLink)}" target="_blank" rel="noopener">Directions from ${esc(pg.area.name)} →</a>` : ""}</p>` : "",
+      kwH2: kw.length ? hashPick([`${kw[0]} in ${city}: what to expect`, `Why ${city} chooses us for ${kw[0].toLowerCase()}`, `${kw[0]} near ${city}, done properly`], s.slug + (pg.area ? pg.area.slug : "")) : "",
+      alsoServing: pg.area ? `<section class="wrap areas">${eyebrow("Also serving")}<ul class="chip-list" data-reveal="stagger">${p.areas.filter(a => a.slug !== pg.area.slug).slice(0, 12).map(a => `<li><a href="${pg.rel}services/${s.slug}/${a.slug}/">${esc(s.name)} in ${esc(a.name)}</a></li>`).join("")}<li><a href="${pg.rel}services/${s.slug}/">${esc(s.name)} in ${esc(b.address.city)}</a></li></ul></section>` : areasList(p, pg, s.slug),
+      bookCard: `<div class="aside-card" data-spotlight><h3>Book ${esc(s.name)}</h3><p>Request a time online and we will confirm by phone or email.</p><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${b.phone ? `<a class="aside-tel" href="${telHref(b.phone)}">${esc(b.phone)}</a>` : ""}<p class="open-status" data-open-status></p></div>`,
+    };
+  }
+  function serviceShowcase(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s);
+    const paras_ = svcBody(p, pg, s);
+    return [heroCinematic(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1, small: true }),
+      crumbsHtml(p, pg),
+      `<section class="svc-intro wrap"><div class="svc-intro-grid"><div data-reveal>${eyebrow("Overview")}${c.kwH2 ? `<h2 data-split>${esc(c.kwH2)}</h2>` : `<h2 data-split>${esc(s.name)}, explained</h2>`}${c.areaNote}${paras(paras_.slice(0, 2).join("\n\n"))}</div><div class="svc-intro-media" data-reveal="wipe"><div>${imgTag(p, pg, (s.gallery && s.gallery[0]) || s.image || s.id + 2, { sizes: "50vw", alt: s.name })}</div>${s.priceFrom ? `<span class="price-tag">From ${esc(s.priceFrom)}</span>` : ""}</div></div></section>`,
+      c.bullets.length ? `<section class="svc-incl wrap">${eyebrow("What’s included")}<div class="incl-grid" data-reveal="stagger">${c.bullets.map((x, i) => `<div class="incl" data-spotlight><span>0${i + 1}</span><p>${esc(x)}</p></div>`).join("")}</div></section>` : "",
+      svcGallery(p, pg, s),
+      paras_.length > 2 ? `<section class="prose wrap narrow" data-reveal>${paras(paras_.slice(2).join("\n\n"))}</section>` : "",
+      `<section class="wrap svc-book-band" data-reveal><div class="book-band" data-spotlight><div><h2>${copy(p, "cta", esc(c.city))}</h2><p>${copy(p, "ctaSub")}</p></div><div class="btn-row"><a class="btn btn-primary" data-magnetic href="${pg.rel}appointment/?service=${encodeURIComponent(s.name)}">${copy(p, "book")}</a>${c.b.phone ? `<a class="btn btn-ghost" href="${telHref(c.b.phone)}">${esc(c.b.phone)}</a>` : ""}</div></div></section>`,
+      faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), `${s.name}: common questions`),
+      c.alsoServing, reviewsSection(p, pg, 4),
+      c.others.length ? `<section class="wrap related">${eyebrow("Related services")}<div class="svc-grid" data-reveal="stagger">${c.others.map((o, i) => `<a class="svc-card" data-tilt href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}"><div class="svc-media">${imgTag(p, pg, o.image || o.id + 1, { sizes: "33vw", alt: o.name })}</div><h3>${esc(o.name)}</h3><p>${esc(o.short)}</p><span class="arrow" aria-hidden="true">→</span></a>`).join("")}</div></section>` : "",
+      ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
+  function serviceSteps(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s);
+    const paras_ = svcBody(p, pg, s);
+    const stepsHtml = c.bullets.length ? `<section class="svc-steps wrap"><div class="svc-steps-grid"><div class="svc-steps-side" data-reveal>${eyebrow("What to expect")}<h2 data-split>${esc(s.name)}, step by step</h2>${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}${p.financing.enabled ? `<p><a class="link-arrow" href="${pg.rel}financing/">Payment options →</a></p>` : ""}</div><ol class="step-list" data-reveal="stagger">${c.bullets.map((x, i) => `<li><span>${String(i + 1).padStart(2, "0")}</span><div><h3>${esc(x.split(/[:—–-]\s/)[0])}</h3>${x.includes(": ") ? `<p>${esc(x.split(": ").slice(1).join(": "))}</p>` : ""}</div></li>`).join("")}</ol></div></section>` : "";
+    return [heroSplit(p, pg, { eyebrowText: pg.area ? `${s.name} · ${pg.area.name}` : "Service", h1: `${esc(s.name)} in <em>${esc(c.city)}</em>`, lead: esc(s.short), imgId: s.image || s.id + 1 }),
+      crumbsHtml(p, pg),
+      `<section class="prose wrap narrow" data-reveal>${c.areaNote}${c.kwH2 ? `<h2>${esc(c.kwH2)}</h2>` : ""}${paras(paras_.join("\n\n"))}</section>`,
+      stepsHtml, svcGallery(p, pg, s),
+      `<section class="wrap svc-faq-split"><div class="svc-cols"><div>${faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), "Questions about " + s.name.toLowerCase()).replace('class="faq wrap"', 'class="faq"')}</div><aside class="svc-aside" data-reveal>${c.bookCard}${c.others.length ? `<div class="aside-links"><h3>Related services</h3><ul>${c.others.map(o => `<li><a href="${pg.rel}services/${o.slug}/${pg.area ? pg.area.slug + "/" : ""}">${esc(o.name)}</a></li>`).join("")}</ul></div>` : ""}</aside></div></section>`,
+      c.alsoServing, reviewsSection(p, pg, 4), ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
+  function serviceEditorial(p, pg) {
+    const s = pg.service, c = svcCommon(p, pg, s), ps = svcBody(p, pg, s);
+    const quote = p.reviews.find(r => new RegExp(s.name.split(" ")[0], "i").test(r.text)) || p.reviews[0];
+    const toc = [["overview", "Overview"], c.bullets.length ? ["included", "What’s included"] : null, (s.gallery || []).length ? ["pictures", "In pictures"] : null, ["faq", "Questions"], ["book", "Book"]].filter(Boolean);
+    return [`<section class="hero hero-editorial hero-svc-ed" data-scroll><div class="hero-inner">${eyebrow(pg.area ? `${s.name} · ${pg.area.name}` : "Service")}<h1 data-split>${esc(s.name)} in <em>${esc(c.city)}</em></h1><div class="hero-ed-row"><p class="lead" data-reveal>${esc(s.short)}</p>${ctaButtons(p, pg)}</div></div><div class="ed-hero-img" data-reveal="wipe"><div>${imgTag(p, pg, s.image || s.id + 1, { sizes: "100vw", eager: true, alt: "" })}</div></div></section>`,
+      crumbsHtml(p, pg),
+      `<section class="wrap ed-body"><div class="ed-grid"><nav class="ed-toc" aria-label="On this page" data-reveal><p class="eyebrow">On this page</p><ol>${toc.map(([id, l]) => `<li><a href="#${id}">${l}</a></li>`).join("")}</ol>${c.bookCard}</nav><article class="prose ed-prose" data-reveal><h2 id="overview">${esc(c.kwH2 || "Overview")}</h2>${c.areaNote}${paras(ps.slice(0, 2).join("\n\n"))}${quote ? `<blockquote class="pull">“${esc(typo(cutAt(quote.text, 180)))}”<cite>— ${esc(quote.author)}</cite></blockquote>` : ""}${paras(ps.slice(2).join("\n\n"))}${c.bullets.length ? `<h2 id="included">What’s included</h2><ul class="checks">${c.bullets.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${s.priceFrom ? `<p class="price">Starting from <strong>${esc(s.priceFrom)}</strong></p>` : ""}</article></div></section>`,
+      svcGallery(p, pg, s).replace('class="svc-gal wrap', 'id="pictures" class="svc-gal wrap'),
+      faqSection(c.faqs.length ? c.faqs : p.faqs.slice(0, 4), `Questions about ${s.name.toLowerCase()}`),
+      c.alsoServing, reviewsSection(p, pg, 4),
+      `<div id="book"></div>` + ctaBand(p, pg, `Ready for ${esc(s.name.toLowerCase())}?`)].join("\n");
+  }
   function legal(p, pg, title, html) {
     return [`<section class="hero hero-sm hero-plain" data-scroll><div class="hero-inner"><p class="eyebrow">Legal</p><h1 data-split>${esc(title)}</h1><p class="lead">Last updated ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p></div></section>`, crumbsHtml(p, pg), `<section class="wrap prose narrow" data-reveal>${html}</section>`].join("\n");
   }
@@ -1198,6 +1329,26 @@ ${dock}
     }
   }
 
+  function securityHead(p) {
+    const sec = p.security || {}; if (!sec.csp) return "";
+    const ga = p.seo.gaId ? " https://www.googletagmanager.com https://www.google-analytics.com" : "";
+    const form = p.forms.provider === "formspree" ? " https://formspree.io" : "";
+    const maps = p.business.mapEmbed ? " https://www.google.com" : "";
+    return `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'${ga}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; connect-src 'self'${ga}${form}; form-action 'self'${form}; frame-src${maps || " 'none'"}; object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">`;
+  }
+  function securityFiles(p, files) {
+    const sec = p.security || {}, base = (p.seo.siteUrl || "").replace(/\/+$/, "");
+    if (sec.securityTxt) files[".well-known/security.txt"] = `Contact: ${p.business.email ? "mailto:" + p.business.email : (base + "/contact/")}\nPreferred-Languages: en\nCanonical: ${base}/.well-known/security.txt\nPolicy: ${base}/privacy/\nExpires: ${new Date(Date.now() + 365 * 864e5).toISOString()}\n`;
+    if (sec.headersFile) {
+      const h = `/*\n  X-Frame-Options: SAMEORIGIN\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\n  Cross-Origin-Opener-Policy: same-origin\n  Cross-Origin-Resource-Policy: same-origin\n  Cache-Control: public, max-age=3600\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`;
+      files["_headers"] = h;
+      files["vercel.json"] = JSON.stringify({ headers: [{ source: "/(.*)", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }, { key: "X-Content-Type-Options", value: "nosniff" }, { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }, { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }, { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" }] }] }, null, 2);
+      files["SECURITY.md"] = `# Security notes for ${p.business.name} website\n\nThis is a fully static site: no server-side code, database, CMS, plugins or admin login exist, so there is nothing to inject into or log in to.\n\nProtections in place:\n- Content-Security-Policy restricting scripts to this origin${p.seo.gaId ? " and Google Analytics" : ""}, no inline scripts, no third-party frames except the map\n- X-Content-Type-Options, Referrer-Policy and Permissions-Policy meta tags; _headers (Netlify/Cloudflare Pages) and vercel.json provide the full HTTP header set including HSTS on hosts that support custom headers\n- All user-entered text is HTML-escaped at build time\n- Forms: honeypot field, timing trap, HTTPS-only POST to the form provider; no form data is stored on the site\n- External links use rel="noopener"; the site enforces HTTPS\n- /.well-known/security.txt gives researchers a contact\n\nOperational advice:\n- Protect the GitHub account with 2FA and a hardware key; it is the only thing that can change this site\n- Use a dedicated GitHub token with repo scope only and rotate it\n- Keep the domain registrar account on 2FA; DNS hijacking is the realistic attack on a static site\n- Enable DNSSEC and set CAA records if your registrar supports them\n`;
+    }
+  }
   /* ---------- assemble one page ---------- */
   function renderPage(p, pg, pages, css, js) {
     pg.description = describe(p, pg);
@@ -1226,6 +1377,7 @@ ${canonical}
 <meta name="geo.region" content="${attr(p.business.address.country || "US")}-${attr(p.business.address.state)}"><meta name="geo.placename" content="${attr(p.business.address.city)}">${p.business.lat && p.business.lng ? `<meta name="geo.position" content="${attr(p.business.lat)};${attr(p.business.lng)}"><meta name="ICBM" content="${attr(p.business.lat)}, ${attr(p.business.lng)}">` : ""}
 ${p.seo.googleVerification ? `<meta name="google-site-verification" content="${attr(p.seo.googleVerification)}">` : ""}${p.seo.bingVerification ? `<meta name="msvalidate.01" content="${attr(p.seo.bingVerification)}">` : ""}
 <meta name="theme-color" content="${attr(p.brand.primary)}">
+${securityHead(p)}
 <link rel="icon" href="${pg.rel}assets/favicon.svg" type="image/svg+xml">${p.brand.logo ? `<link rel="apple-touch-icon" href="${pg.rel}assets/logo.${p.brand.logoExt || "png"}">` : ""}
 <link rel="manifest" href="${pg.rel}manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1327,7 +1479,7 @@ html.nav-open .nav-overlay{opacity:1;visibility:visible}html.nav-open .site-head
 .crumbs{width:min(var(--wrap),calc(100% - 2rem));margin:1.2rem auto -2rem;font-size:.85rem;color:var(--muted)}.crumbs ol{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem;padding:0;margin:0}.crumbs li+li::before{content:"/";margin-right:.4rem;opacity:.5}.crumbs a{text-decoration:none}
 /* manifesto + stats */
 .manifesto{text-align:center}.scrub{font:400 clamp(1.4rem,3vw,2.5rem)/1.3 var(--font-d);max-width:28ch;margin-inline:auto;letter-spacing:-.01em}
-.stats{padding-block:0}.stats ul{list-style:none;margin:0;padding:2.5rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1.5rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.stats strong{display:block;font:600 clamp(2.4rem,5vw,4rem)/1 var(--font-d);color:var(--primary)}.stats span{color:var(--muted);font-size:.9rem}
+.stats{padding-block:0}.stats ul{list-style:none;margin:0;padding:2.5rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1.5rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}@media(min-width:900px){.stats ul{text-align:left}}.stats strong{display:block;font:600 clamp(2.4rem,5vw,4rem)/1 var(--font-d);color:var(--primary)}.stats span{color:var(--muted);font-size:.9rem}
 /* services */
 .svc-card{position:relative;display:flex;flex-direction:column;gap:.6rem;padding:1.2rem;background:var(--paper-2);border-radius:var(--radius);text-decoration:none;overflow:hidden;transition:box-shadow .5s var(--ease)}.svc-card:hover{box-shadow:0 30px 60px -30px rgba(0,0,0,.4)}
 .svc-media{aspect-ratio:4/3;border-radius:calc(var(--radius) - 6px);overflow:hidden}.svc-media img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-card:hover .svc-media img{transform:scale(1.06)}
@@ -1335,7 +1487,7 @@ html.nav-open .nav-overlay{opacity:1;visibility:visible}html.nav-open .site-head
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.4rem}
 .hscroll{position:relative}.hscroll-track{padding:1rem clamp(1rem,4vw,4rem) 2rem}.hscroll-track>*{width:min(78vw,420px)}.hscroll-bar{height:3px;background:var(--accent);margin:0 clamp(1rem,4vw,4rem)}
 /* split / process / hover list */
-.split{display:grid;gap:2.5rem;align-items:center}@media(min-width:900px){.split{grid-template-columns:1.1fr 1fr;gap:5rem}}.split-media img{width:100%;border-radius:var(--radius);aspect-ratio:4/5;object-fit:cover}
+.split{display:grid;gap:2.5rem;align-items:center}.split-media>div{border-radius:var(--radius);overflow:hidden}@media(min-width:900px){.split{grid-template-columns:1.1fr 1fr;gap:5rem}}.split-media img{width:100%;border-radius:var(--radius);aspect-ratio:4/5;object-fit:cover}
 .stack{list-style:none;padding:0;margin:0;display:grid;gap:1.2rem}.stack li{position:sticky;top:calc(var(--header-h,80px) + 1rem);background:var(--primary);color:#fff;padding:2.5rem;border-radius:var(--radius);min-height:260px}.stack li:nth-child(2){top:calc(var(--header-h,80px) + 2.5rem);background:color-mix(in srgb,var(--primary) 80%,#000)}.stack li:nth-child(3){top:calc(var(--header-h,80px) + 4rem);background:color-mix(in srgb,var(--primary) 60%,#000)}.stack span{color:var(--accent);font-weight:600;letter-spacing:.15em}.stack h3{font-size:1.9rem;margin:.4rem 0}
 .hover-list ul{list-style:none;margin:0;padding:0}.hover-list li{border-top:1px solid var(--line)}.hover-list li:last-child{border-bottom:1px solid var(--line)}.hover-list a{display:flex;align-items:baseline;justify-content:space-between;gap:2rem;padding:1.4rem 0;text-decoration:none;transition:padding .4s var(--ease)}.hover-list a:hover{padding-left:1rem;color:var(--primary)}.hover-list a span{font:600 clamp(1.4rem,3vw,2.4rem)/1.1 var(--font-d)}.hover-list a small{color:var(--muted);text-align:right;max-width:40ch}
 /* reviews */
@@ -1392,7 +1544,7 @@ ${featureCss(p)}
 ${f.underline ? `h1 em,h2 em,h1 em .w>span,h2 em .w>span{background:none!important;-webkit-text-fill-color:currentColor;color:var(--accent);animation:none}h1 em{position:relative;display:inline-block}h1 em::after{content:"";position:absolute;left:0;right:0;bottom:-.06em;height:.2em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20' preserveAspectRatio='none'%3E%3Cpath d='M2 14 C 60 2, 140 22, 198 8' fill='none' stroke='%23${p.brand.accent.replace("#", "")}' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/100% 100%;opacity:.9;transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease) .9s}.js [data-split].is-in em::after,html:not(.js) h1 em::after{transform:scaleX(1)}` : ""}
 .process-pin{display:grid;gap:2.5rem}@media(min-width:960px){.process-pin{grid-template-columns:1fr 1fr;gap:5rem;align-items:start}.process-media{position:sticky;top:calc(var(--header-h,80px) + 2rem)}}.process-media>div{position:relative;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;background:var(--paper-2)}.process-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity .8s var(--ease),transform 1.4s var(--ease)}.process-media img.is-active{opacity:1;transform:none}
 .process-steps ol{list-style:none;padding:0;margin:0}.process-steps li{padding:2.2rem 0 2.2rem 4.2rem;position:relative;border-top:1px solid var(--line);opacity:.4;transition:opacity .5s}.process-steps li.is-active{opacity:1}.process-steps li span{position:absolute;left:0;top:2.3rem;font:600 .8rem var(--font-b);letter-spacing:.15em;color:var(--accent);width:44px;height:44px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;transition:.4s}.process-steps li.is-active span{background:var(--primary);color:#fff;border-color:var(--primary)}.process-steps h3{font-size:1.7rem;margin:0 0 .4rem}.process-steps p{color:var(--muted);max-width:44ch;margin:0}@media(min-width:960px){.process-steps li{padding-block:4rem;min-height:40vh}}
-.pbreak{height:clamp(260px,50vh,560px);overflow:hidden;position:relative}.pbreak-img{position:absolute;inset:-25% 0}.pbreak-img img{width:100%;height:100%;object-fit:cover;transform:translateY(calc((var(--progress,.5) - .5)*-18%))}
+.pbreak{height:clamp(240px,42vh,480px);overflow:hidden;position:relative;margin:1rem 0}.pbreak-img{position:absolute;inset:-25% 0}.pbreak-img img{width:100%;height:100%;object-fit:cover;transform:translateY(calc((var(--progress,.5) - .5)*-18%))}
 .ba-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}.ba-item{margin:0;overflow:hidden;border-radius:var(--radius)}.ba-frame{position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;--ba:50%;cursor:ew-resize;user-select:none}.ba-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.ba-after{position:absolute;inset:0;clip-path:inset(0 0 0 var(--ba))}.ba-frame input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:ew-resize;z-index:2}.ba-handle{position:absolute;top:0;bottom:0;left:var(--ba);width:2px;background:#fff;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.2);z-index:1}.ba-handle::after{content:"⟷";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font-size:1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.35)}.ba-tag{position:absolute;top:1rem;padding:.3rem .7rem;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font:600 .7rem/1 var(--font-b);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;z-index:1}.ba-tag-l{left:1rem}.ba-tag-r{right:1rem}.ba-item figcaption{padding:.7rem 0;color:var(--muted);font-size:.9rem}
 .quiz-card{padding:clamp(1.6rem,4vw,3.5rem);border-radius:calc(var(--radius) + 8px);background:var(--ink);color:var(--paper);min-height:360px;display:grid;align-items:center}.quiz-card h2{font-size:clamp(1.7rem,3.4vw,2.6rem);margin:.2rem 0 .6rem}.quiz-card p{color:color-mix(in srgb,var(--paper) 70%,transparent)}.quiz-card .eyebrow{color:var(--accent)}.quiz-opts{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.2rem}.quiz-opts button{padding:1rem 1.4rem;border-radius:999px;border:1px solid color-mix(in srgb,var(--paper) 30%,transparent);background:color-mix(in srgb,var(--paper) 6%,transparent);color:inherit;font:600 .95rem var(--font-b);cursor:pointer;transition:.3s}.quiz-opts button:hover{background:var(--accent);color:#111;border-color:var(--accent);transform:translateY(-2px)}.quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.quiz-grid button{text-align:left;border-radius:14px}.quiz-card.is-flip>*{animation:qin .4s var(--ease)}@keyframes qin{from{opacity:0;transform:translateY(10px)}}.quiz-result .btn-row{margin-top:1rem}.quiz-card .link-arrow{background:none;border:0;border-bottom:1px solid var(--accent);color:var(--accent);cursor:pointer;font:inherit;padding:0}.quiz-urgent h2{color:var(--accent)}
 .rv-head{display:flex;align-items:flex-end;gap:2rem;margin-bottom:2rem}.rv-ring{--pct:100;flex:none;width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;background:conic-gradient(var(--accent) calc(var(--pct)*1%),color-mix(in srgb,currentColor 15%,transparent) 0);position:relative}.rv-ring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--ink)}.layout-editorial .rv-ring::before,.layout-collage .rv-ring::before{background:var(--paper-2)}.layout-split .rv-ring::before{background:var(--primary)}.rv-ring strong,.rv-ring span{position:relative}.rv-ring strong{display:block;font:600 2rem/1 var(--font-d)}.rv-ring span{font-size:.7rem;opacity:.7}
@@ -1403,6 +1555,18 @@ ${f.underline ? `h1 em,h2 em,h1 em .w>span,h2 em .w>span{background:none!importa
 .preloader{position:fixed;inset:0;z-index:999;background:var(--primary);display:grid;place-items:center;transition:transform .8s var(--ease)}.preloader.is-done{transform:translateY(-100%)}.pre-inner{animation:prefade .6s both .1s}.pre-logo{height:56px;width:auto;filter:brightness(0) invert(1)}.preloader .wordmark{color:#fff;font-size:2rem}@keyframes prefade{from{opacity:0;transform:translateY(12px)}}.preloader.is-done .pre-inner{opacity:0;transition:opacity .3s}
 .dock{position:fixed;right:1.5rem;bottom:1.5rem;z-index:95;display:none;opacity:0;transform:translateY(20px);transition:.5s var(--ease)}@media(min-width:1000px){.dock{display:block}}.dock.is-visible{opacity:1;transform:none}.dock-toggle{display:flex;align-items:center;gap:.6rem;padding:.9rem 1.3rem;border-radius:999px;border:0;background:var(--ink);color:var(--paper);font:600 .9rem var(--font-b);cursor:pointer;box-shadow:0 20px 40px -15px rgba(0,0,0,.5)}.dock-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2s infinite}.dock-panel{position:absolute;right:0;bottom:calc(100% + .8rem);width:280px;padding:1.3rem;border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 30px 60px -20px rgba(0,0,0,.4);opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;transition:.35s var(--ease)}.dock.is-open .dock-panel{opacity:1;transform:none;pointer-events:auto}.dock-panel .btn{width:100%;justify-content:center;margin-top:.6rem}.dock-panel p{font-size:.9rem;margin:0 0 .4rem}
 .cta-sub{max-width:48ch;margin:.5rem auto 0;opacity:.85}
+/* service variants */
+.svc-gal-grid{display:grid;gap:.8rem;grid-template-columns:repeat(2,1fr)}@media(min-width:900px){.svc-gal-grid{grid-template-columns:repeat(3,1fr)}.svc-gal-grid.n2{grid-template-columns:repeat(2,1fr)}.svc-gal-grid.n4{grid-template-columns:repeat(4,1fr)}.svc-gal-grid.n5 figure:first-child,.svc-gal-grid.n6 figure:first-child{grid-column:span 2;grid-row:span 2}}.svc-gal-grid figure{margin:0;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}.svc-gal-grid figure img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-gal-grid figure:hover img{transform:scale(1.05)}
+.svc-intro-grid{display:grid;gap:2.5rem;align-items:center}@media(min-width:900px){.svc-intro-grid{grid-template-columns:1.1fr 1fr;gap:5rem}}.svc-intro-media{position:relative}.svc-intro-media>div{border-radius:var(--radius);overflow:hidden;aspect-ratio:4/5}.svc-intro-media img{width:100%;height:100%;object-fit:cover}.price-tag{position:absolute;left:1rem;bottom:1rem;padding:.6rem 1rem;border-radius:999px;background:var(--accent);color:#111;font:600 .85rem var(--font-b)}
+.incl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}.incl{padding:1.5rem;border-radius:var(--radius);background:var(--paper-2);display:flex;gap:1rem;align-items:flex-start}.incl span{font:600 .75rem var(--font-b);letter-spacing:.15em;color:var(--accent);padding-top:.3rem}.incl p{margin:0;font-weight:500}
+.book-band{display:grid;gap:1.5rem;align-items:center;padding:clamp(1.6rem,4vw,3rem);border-radius:calc(var(--radius) + 8px);background:var(--ink);color:var(--paper)}@media(min-width:900px){.book-band{grid-template-columns:1.4fr 1fr}.book-band .btn-row{justify-content:flex-end}}.book-band h2{font-size:clamp(1.6rem,3vw,2.4rem);margin:0 0 .4rem}.book-band p{margin:0;opacity:.75}
+.svc-steps-grid{display:grid;gap:2.5rem}@media(min-width:900px){.svc-steps-grid{grid-template-columns:1fr 1.5fr;gap:5rem}.svc-steps-side{position:sticky;top:calc(var(--header-h,80px) + 2rem);align-self:start}}.step-list{list-style:none;margin:0;padding:0;counter-reset:s}.step-list li{display:grid;grid-template-columns:auto 1fr;gap:1.4rem;padding:1.8rem 0;border-top:1px solid var(--line)}.step-list li:last-child{border-bottom:1px solid var(--line)}.step-list span{font:600 1.4rem/1 var(--font-d);color:var(--accent);width:2.4rem}.step-list h3{margin:0 0 .3rem;font-size:1.3rem}.step-list p{margin:0;color:var(--muted)}
+.svc-faq-split .faq{padding-block:0}
+.svc-row{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:center;padding:1.8rem 0;border-top:1px solid var(--line);text-decoration:none;transition:padding .4s var(--ease)}@media(min-width:800px){.svc-row{grid-template-columns:3rem 220px 1fr auto}}.svc-row:last-child{border-bottom:1px solid var(--line)}.svc-row:hover{padding-left:1rem}.svc-row .num{color:var(--accent);font:600 .8rem var(--font-b);letter-spacing:.15em}.svc-row-media{display:none;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}@media(min-width:800px){.svc-row-media{display:block}}.svc-row-media img{width:100%;height:100%;object-fit:cover}.svc-row h2{font-size:1.6rem;margin:0 0 .3rem}.svc-row p{color:var(--muted);margin:0 0 .6rem}.chip-list.mini li span{display:inline-block;padding:.3rem .7rem;border:1px solid var(--line);border-radius:999px;font-size:.78rem}.svc-row .arrow{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--paper-2);transition:.4s}.svc-row:hover .arrow{background:var(--accent);transform:rotate(-45deg)}
+.tab-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:2rem}.tab-list button{padding:.7rem 1.1rem;border-radius:999px;border:1px solid var(--line);background:transparent;color:inherit;font:600 .9rem var(--font-b);cursor:pointer}.tab-list button[aria-selected=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}.tab-grid{display:grid;gap:2rem;align-items:center}@media(min-width:900px){.tab-grid{grid-template-columns:1fr 1fr;gap:4rem}}.tab-media{border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3}.tab-media img{width:100%;height:100%;object-fit:cover}.tab-panel{animation:qin .5s var(--ease)}
+.svc-bento-grid{display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)}@media(min-width:900px){.svc-bento-grid{grid-template-columns:repeat(4,1fr)}.svc-bcell.big{grid-column:span 2;grid-row:span 2}}.svc-bcell{position:relative;display:block;border-radius:var(--radius);overflow:hidden;aspect-ratio:1;text-decoration:none;color:#fff}.svc-bcell.big{aspect-ratio:auto}.svc-bmedia,.svc-bmedia img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}.svc-bcell:hover img{transform:scale(1.06)}.svc-btext{position:absolute;inset:auto 0 0 0;padding:1.3rem;background:linear-gradient(transparent,rgba(0,0,0,.8))}.svc-btext h2{font-size:1.3rem;margin:0 0 .2rem}.svc-btext p{margin:0;font-size:.85rem;opacity:.85;display:none}.svc-bcell.big .svc-btext p{display:block}.svc-bcell.big h2{font-size:2rem}
+.hero-svc-ed{padding-bottom:0}.ed-hero-img{width:min(var(--wrap),calc(100% - 2rem));margin:3rem auto -4rem}.ed-hero-img>div{aspect-ratio:21/9;border-radius:var(--radius);overflow:hidden}.ed-hero-img img{width:100%;height:100%;object-fit:cover}.ed-body{padding-top:7rem}.ed-grid{display:grid;gap:3rem}@media(min-width:960px){.ed-grid{grid-template-columns:260px 1fr;gap:5rem}.ed-toc{position:sticky;top:calc(var(--header-h,80px) + 2rem);align-self:start}}.ed-toc ol{list-style:none;padding:0;margin:0 0 1.5rem}.ed-toc li{border-top:1px solid var(--line)}.ed-toc a{display:block;padding:.6rem 0;text-decoration:none;font-weight:500}.ed-toc a:hover{color:var(--primary)}.ed-prose{max-width:68ch}.ed-toc .aside-card{padding:1.2rem}.ed-toc .aside-card .btn{font-size:.85rem;padding:.8rem .6rem}.ed-prose p:first-of-type::first-letter{font:600 3.4em/.8 var(--font-d);float:left;margin:.1em .15em 0 0;color:var(--accent)}.pull{margin:2.5rem 0;padding:0 0 0 1.5rem;border-left:3px solid var(--accent);font:400 1.5rem/1.35 var(--font-d);font-style:italic}.pull cite{display:block;font:500 .85rem var(--font-b);font-style:normal;margin-top:.6rem;color:var(--muted)}
+.post-list-home .post-card h3{font-size:1.3rem;margin:.3rem 0}.related .svc-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .usp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem}.usp{padding:1.6rem;border-top:2px solid var(--accent);background:var(--paper-2);border-radius:0 0 var(--radius) var(--radius)}.usp span{font:600 .75rem var(--font-b);letter-spacing:.15em;color:var(--accent)}.usp h3{font-size:1.25rem;margin:.5rem 0 .3rem}.usp p{color:var(--muted);margin:0;font-size:.95rem}
 @media(prefers-reduced-motion:reduce){.kinetic,.process-media img,.preloader,.dock{transition:none!important;animation:none!important}}`;
   }
@@ -1467,6 +1631,9 @@ document.querySelectorAll('[data-process]').forEach(function(ol){
   var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){var n=x.target.getAttribute('data-step-index');items.forEach(function(li){li.classList.toggle('is-active',li===x.target)});imgs.forEach(function(im){im.classList.toggle('is-active',im.getAttribute('data-process-img')===n)})}})},{rootMargin:'-45% 0px -45% 0px'});
   items.forEach(function(li){io.observe(li)});if(items[0])items[0].classList.add('is-active');if(imgs[0])imgs[0].classList.add('is-active');
 });
+document.querySelectorAll('[data-em]').forEach(function(a){var e=a.getAttribute('data-em').split('').reverse().join('');a.href='mailto:'+e;a.textContent=e});
+document.querySelectorAll('[data-timetrap]').forEach(function(i){var t0=Date.now();i.form.addEventListener('submit',function(e){i.value=String(Date.now()-t0);if(Date.now()-t0<2500){e.preventDefault();var b=i.form.querySelector('button[type=submit]');if(b){b.disabled=false;b.querySelector('span').textContent='Please take a moment, then send again'}}},true)});
+document.querySelectorAll('[data-tabs]').forEach(function(w){w.addEventListener('click',function(e){var t=e.target.closest('[data-tab]');if(!t)return;w.querySelectorAll('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===t)});w.querySelectorAll('[data-tab-panel]').forEach(function(pn){pn.hidden=pn.getAttribute('data-tab-panel')!==t.getAttribute('data-tab')})})});
 document.querySelectorAll('[data-ba]').forEach(function(fig){var r=fig.querySelector('input[type=range]'),set=function(){fig.style.setProperty('--ba',r.value+'%')};r.addEventListener('input',set);set()});
 document.querySelectorAll('[data-quiz]').forEach(function(q){
   var steps=q.querySelectorAll('[data-quiz-step]'),urgentMsg=q.querySelector('[data-quiz-urgent-msg]');
@@ -1498,6 +1665,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     files["robots.txt"] = robots(p);
     files["llms.txt"] = llmsTxt(p, pages);
     files["manifest.webmanifest"] = manifest(p);
+    securityFiles(p, files);
     files[".nojekyll"] = "";
     files["CNAME"] = p.seo.customDomain ? p.seo.customDomain : undefined;
     if (!p.seo.customDomain) delete files["CNAME"];
@@ -1541,8 +1709,19 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     add("design", (p.headlines && Object.values(p.headlines).some(Boolean)) || p.voice !== "warm", 6, "Custom voice or headline overrides", "Pick a voice / write a headline");
     add("design", p.forms.endpoint, 8, "Forms deliver (Formspree endpoint)", "Add the endpoint in step 7");
     add("design", p.reviews.length >= 4, 4, "Review wall (4+ reviews)", "");
+    out.security = [];
+    add("security", true, 20, "Static site: no server code, database, CMS or admin login to attack", "");
+    add("security", p.security.csp, 15, "Content-Security-Policy, nosniff, referrer and permissions policies", "Enable CSP in step 7");
+    add("security", p.security.honeypot && p.security.timetrap, 10, "Form spam protection (honeypot + timing trap)", "Enable in step 7");
+    add("security", p.security.headersFile, 10, "HSTS/X-Frame-Options header files for Netlify, Cloudflare, Vercel", "Enable header files");
+    add("security", p.security.securityTxt, 5, "security.txt for responsible disclosure", "Enable security.txt");
+    add("security", p.security.hideEmail || !b.email, 5, "Email address obfuscated against scrapers", "Enable email obfuscation");
+    add("security", (p.seo.siteUrl || "").startsWith("https://"), 10, "HTTPS site URL", "Use an https:// URL");
+    add("security", !p.seo.gaId || true, 5, "No third-party scripts beyond analytics", "");
+    add("security", true, 10, "All content HTML-escaped at build; no inline event handlers", "");
+    add("security", p.seo.customDomain ? true : true, 10, "GitHub Pages enforces HTTPS and TLS 1.2+", "");
     const pct = (arr) => Math.round(arr.reduce((a, x) => a + (x.ok ? x.w : 0), 0) / arr.reduce((a, x) => a + x.w, 0) * 100);
-    return { seo: pct(out.seo), geo: pct(out.geo), aeo: pct(out.aeo), design: pct(out.design), items: out };
+    return { seo: pct(out.seo), geo: pct(out.geo), aeo: pct(out.aeo), design: pct(out.design), security: pct(out.security), items: out };
   }
   const api = { build, plan, normalize, slug, parseFaqs, DEFAULT, score, seedLook };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.PSB = api;
@@ -1669,12 +1848,15 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
       const c = document.createElement("div"); c.className = "card";
       c.innerHTML = `<h3>${esc(opts.title ? opts.title(item, i) : (item.name || item.title || item.q || "Item " + (i + 1)))}</h3>` +
         fields.map(f => {
+          if (f.type === "images") return `<div class="imgpick"><span>${f.label}</span><div class="imgpick-grid">${project.images.map(im => `<label class="imgpick-item"><input type="checkbox" data-fm="${f.key}" value="${im.id}" ${(item[f.key] || []).includes(im.id) ? "checked" : ""}><img src="${IMAGES.get(im.id) ? IMAGES.get(im.id).thumb : ""}" alt=""></label>`).join("") || "<em class=muted>Upload photos in step 3 first</em>"}</div></div>`;
+          if (f.type === "select") return `<label>${f.label}<select data-f="${f.key}">${f.options.map(([v, l]) => `<option value="${v}" ${item[f.key] === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>`;
           if (f.type === "image") return `<label>${f.label}<select data-f="${f.key}"><option value="">(auto)</option>${project.images.map(im => `<option value="${im.id}" ${item[f.key] === im.id ? "selected" : ""}>${esc(im.alt || im.id)}</option>`).join("")}</select></label>`;
           if (f.type === "textarea") return `<label>${f.label}<textarea data-f="${f.key}" rows="${f.rows || 3}" placeholder="${esc(f.ph || "")}">${esc(item[f.key])}</textarea></label>`;
           return `<label>${f.label}<input data-f="${f.key}" value="${esc(item[f.key])}" placeholder="${esc(f.ph || "")}" ${f.type ? `type="${f.type}"` : ""}></label>`;
         }).join("") +
         (opts.ai ? `<button class="ghost ai" type="button" title="Draft with AI">✦ AI</button>` : "") +
         `<button class="mv" type="button" title="Move up">↑</button><button class="rm" type="button" aria-label="Remove">×</button>`;
+      c.querySelectorAll("[data-fm]").forEach(el => el.addEventListener("change", () => { item[el.dataset.fm] = [...c.querySelectorAll(`[data-fm="${el.dataset.fm}"]:checked`)].map(x => x.value).slice(0, 6); persist(); }));
       c.querySelectorAll("[data-f]").forEach(el => el.addEventListener("input", () => { item[el.dataset.f] = el.value; if (el.dataset.f === "name" || el.dataset.f === "title" || el.dataset.f === "q") c.querySelector("h3").textContent = el.value || "Item"; updateCounts(); persist(); }));
       c.querySelector(".rm").addEventListener("click", () => { arr.splice(i, 1); cardList(listSel, arr, fields, opts); updateCounts(); persist(); });
       c.querySelector(".mv").addEventListener("click", () => { if (i > 0) { [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; cardList(listSel, arr, fields, opts); persist(); } });
@@ -1691,7 +1873,9 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     { key: "faqs", label: "Service FAQs (question line, answer line, blank line between)", type: "textarea", rows: 4, ph: "Does it hurt?\nMost patients report only mild soreness…" },
     { key: "keywords", label: "Target keywords for this service (one per line; first drives the title & H2)", type: "textarea", rows: 2, ph: "Emergency vet\n24 hour vet near me" },
     { key: "priceFrom", label: "Price from (optional, only if accurate)", ph: "$199" },
-    { key: "image", label: "Photo", type: "image" },
+    { key: "image", label: "Hero photo", type: "image" },
+    { key: "gallery", label: "Gallery photos for this service (tick up to 6)", type: "images" },
+    { key: "variant", label: "Page design", type: "select", options: [["", "Auto (site setting)"], ["classic", "Classic"], ["showcase", "Showcase"], ["steps", "Steps"], ["editorial", "Editorial"]] },
   ];
   const AREA_FIELDS = [{ key: "name", label: "City / neighborhood *", ph: "San Dimas" }, { key: "state", label: "State", ph: "CA" }, { key: "note", label: "Local note (optional, keeps the page specific)", ph: "About 10 minutes from our office via Arrow Hwy." }];
   const REV_FIELDS = [{ key: "author", label: "Name as shown", ph: "Maria G." }, { key: "rating", label: "Rating (1–5)", type: "number" }, { key: "text", label: "Review text (verbatim)", type: "textarea" }, { key: "source", label: "Source", ph: "Google" }];
@@ -1714,7 +1898,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     cardList("#ba-list", project.beforeAfter, BA_FIELDS, { title: (x, i) => x.label || "Pair " + (i + 1) });
   }
   const adders = {
-    "#svc-add": () => project.services.push({ name: "", short: "", body: "", bullets: "", faqs: "", priceFrom: "", image: "" }),
+    "#svc-add": () => project.services.push({ name: "", short: "", body: "", bullets: "", faqs: "", keywords: "", priceFrom: "", image: "", gallery: [], variant: "" }),
     "#area-add": () => project.areas.push({ name: "", state: project.business.address.state, note: "" }),
     "#rev-add": () => project.reviews.push({ author: "", rating: 5, text: "", source: "Google" }),
     "#faq-add": () => project.faqs.push({ q: "", a: "" }),
@@ -1779,7 +1963,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     project.images.forEach((im, i) => {
       const rec = IMAGES.get(im.id); if (!rec) return;
       const c = document.createElement("div"); c.className = "img-card";
-      c.innerHTML = `<img src="${rec.thumb}" alt=""><input value="${esc(im.alt)}" placeholder="Describe this photo (alt text)"><div class="bar"><span>${i === 0 ? "★ Hero" : "#" + (i + 1)} · ${rec.w}×${rec.h}</span><span><button type="button" title="Move up">↑</button><button type="button" title="Remove">×</button></span></div>`;
+      c.innerHTML = `<img src="${rec.thumb}" alt=""><input value="${esc(im.alt)}" placeholder="Describe this photo (alt text)"><div class="bar"><span>${i === 0 ? "★ Hero" : "#" + (i + 1)} · ${rec.w}×${rec.h}${rec.w < 1200 ? ' <b class="lowres" title="Under 1200px wide: used only for small cards, never full-width, to avoid blur">⚠ low-res</b>' : ""}</span><span><button type="button" title="Move up">↑</button><button type="button" title="Remove">×</button></span></div>`;
       c.querySelector("input").addEventListener("input", e => { im.alt = e.target.value; persist(); });
       const [up, rm] = c.querySelectorAll(".bar button");
       up.addEventListener("click", () => { if (i > 0) { [project.images[i - 1], project.images[i]] = [project.images[i], project.images[i - 1]]; renderImages(); persist(); } });
@@ -1907,6 +2091,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
     c(p.services.every(s => s.short), true, "Every service has a summary");
     c(p.images.length >= 10, p.images.length >= 3, `${p.images.length} photos (10+ recommended)`);
     c(p.images.every(i => i.alt), true, "Every photo has alt text");
+    c(p.images.filter(i => (i.w || 0) >= 1200).length >= 3, true, `${p.images.filter(i => (i.w || 0) >= 1200).length} photos at 1200px+ (needed for hero, parallax and CTA backgrounds — smaller ones look blurry)`);
     c(!!p.brand.logo, true, "Logo uploaded (otherwise a wordmark is used)");
     c(!!p.seo.siteUrl, true, "Final site URL set (needed for canonical URLs, sitemap and Open Graph)");
     c(p.areas.length >= 3, true, `${p.areas.length} service areas (more areas = more location pages)`);
@@ -1918,7 +2103,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
   function renderBuildPanel() {
     const sc = PSB.score(project);
     const cls = (n) => n >= 80 ? "g" : n >= 55 ? "y" : "r";
-    $("#scores").innerHTML = [["SEO", sc.seo], ["GEO (local)", sc.geo], ["AEO (AI answers)", sc.aeo], ["Design & conversion", sc.design]].map(([l, n]) => `<div class="score ${cls(n)}"><strong>${n}</strong><span>${l}</span></div>`).join("");
+    $("#scores").innerHTML = [["SEO", sc.seo], ["GEO (local)", sc.geo], ["AEO (AI answers)", sc.aeo], ["Design & conversion", sc.design], ["Security", sc.security]].map(([l, n]) => `<div class="score ${cls(n)}"><strong>${n}</strong><span>${l}</span></div>`).join("");
     $("#score-items").innerHTML = Object.entries(sc.items).map(([k, arr]) => arr.map(x => `<div class="${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "✗"} ${esc(x.label)} <em>(${x.w})</em>${!x.ok && x.fix ? `<small>→ ${esc(x.fix)}</small>` : ""}</div>`).join("")).join("");
     const cs = checks(); $("#checks").innerHTML = cs.map(x => `<div class="${x.cls}">${esc(x.msg)}</div>`).join("");
     const pages = PSB.plan(PSB.normalize(structuredClone(project)));
@@ -1965,6 +2150,7 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
   });
 
   /* preview: rewrite relative asset links to blob URLs for the chosen page */
+  let lastPreviewHtml = "";
   const urlCache = new Map();
   const blobUrl = (k) => { if (!urlCache.has(k)) urlCache.set(k, URL.createObjectURL(built.blobs[k])); return urlCache.get(k); };
   function showPreview() {
@@ -1975,13 +2161,19 @@ var dock=document.querySelector('[data-dock]');if(dock){var t=dock.querySelector
       return built.blobs[asset] ? `${a}="${blobUrl(asset)}"` : m;
     });
     html = html.replace(/href="((?:\.\.\/)*)([^"#:]*\/|)"/g, (m, rel, p) => `href="#" data-nav-to="${p}index.html"`).replace("<head>", "<head><base target=\"_self\">");
+    html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, "<!-- CSP removed in preview only; it is active on the published site -->");
+    lastPreviewHtml = html;
     const frame = $("#preview-frame"); frame.srcdoc = html + `<script>document.addEventListener('click',e=>{const a=e.target.closest('[data-nav-to]');if(a){e.preventDefault();parent.postMessage({psbNav:a.dataset.navTo},'*')}})<\/script>`;
     $("#preview").hidden = false; $("#preview").scrollIntoView({ behavior: "smooth" });
   }
   addEventListener("message", e => { if (e.data && e.data.psbNav && built) { const p = e.data.psbNav === "index.html" ? "index.html" : e.data.psbNav; if (built.files[p]) { $("#preview-page").value = p; showPreview(); } } });
   $("#btn-preview").addEventListener("click", showPreview);
   $("#preview-page").addEventListener("change", showPreview);
-  $("#preview-mobile").addEventListener("click", () => $("#preview").classList.toggle("is-mobile"));
+  $$(".dev").forEach(b => b.addEventListener("click", () => { $$(".dev").forEach(x => x.classList.toggle("is-on", x === b)); const pv = $("#preview"); pv.className = "preview dev-" + b.dataset.dev; }));
+  $("#preview-rotate").addEventListener("click", () => $("#preview").classList.toggle("is-rot"));
+  $("#preview-full").addEventListener("click", () => { const pv = $("#preview"); document.fullscreenElement ? document.exitFullscreen() : pv.requestFullscreen && pv.requestFullscreen(); });
+  $("#preview-tab").addEventListener("click", () => { const html = lastPreviewHtml; if (!html) return; const u = URL.createObjectURL(new Blob([html.replace(/data-nav-to="[^"]*"/g, "")], { type: "text/html" })); window.open(u, "_blank"); });
+
   $("#preview-close").addEventListener("click", () => $("#preview").hidden = true);
 
   /* ---------- GitHub publish via Git Data API ---------- */

@@ -234,7 +234,7 @@
     project.images.forEach((im, i) => {
       const rec = IMAGES.get(im.id); if (!rec) return;
       const c = document.createElement("div"); c.className = "img-card";
-      c.innerHTML = `<img src="${rec.thumb}" alt=""><input value="${esc(im.alt)}" placeholder="Describe this photo (alt text)"><div class="bar"><span>${i === 0 ? "★ Hero" : "#" + (i + 1)} · ${rec.w}×${rec.h}</span><span><button type="button" title="Move up">↑</button><button type="button" title="Remove">×</button></span></div>`;
+      c.innerHTML = `<img src="${rec.thumb}" alt=""><input value="${esc(im.alt)}" placeholder="Describe this photo (alt text)"><div class="bar"><span>${i === 0 ? "★ Hero" : "#" + (i + 1)} · ${rec.w}×${rec.h}${rec.w < 1200 ? ' <b class="lowres" title="Under 1200px wide: used only for small cards, never full-width, to avoid blur">⚠ low-res</b>' : ""}</span><span><button type="button" title="Move up">↑</button><button type="button" title="Remove">×</button></span></div>`;
       c.querySelector("input").addEventListener("input", e => { im.alt = e.target.value; persist(); });
       const [up, rm] = c.querySelectorAll(".bar button");
       up.addEventListener("click", () => { if (i > 0) { [project.images[i - 1], project.images[i]] = [project.images[i], project.images[i - 1]]; renderImages(); persist(); } });
@@ -362,6 +362,7 @@
     c(p.services.every(s => s.short), true, "Every service has a summary");
     c(p.images.length >= 10, p.images.length >= 3, `${p.images.length} photos (10+ recommended)`);
     c(p.images.every(i => i.alt), true, "Every photo has alt text");
+    c(p.images.filter(i => (i.w || 0) >= 1200).length >= 3, true, `${p.images.filter(i => (i.w || 0) >= 1200).length} photos at 1200px+ (needed for hero, parallax and CTA backgrounds — smaller ones look blurry)`);
     c(!!p.brand.logo, true, "Logo uploaded (otherwise a wordmark is used)");
     c(!!p.seo.siteUrl, true, "Final site URL set (needed for canonical URLs, sitemap and Open Graph)");
     c(p.areas.length >= 3, true, `${p.areas.length} service areas (more areas = more location pages)`);
