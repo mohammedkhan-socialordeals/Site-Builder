@@ -431,6 +431,7 @@
       return built.blobs[asset] ? `${a}="${blobUrl(asset)}"` : m;
     });
     html = html.replace(/href="((?:\.\.\/)*)([^"#:]*\/|)"/g, (m, rel, p) => `href="#" data-nav-to="${p}index.html"`).replace("<head>", "<head><base target=\"_self\">");
+    html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, "<!-- CSP removed in preview only; it is active on the published site -->");
     lastPreviewHtml = html;
     const frame = $("#preview-frame"); frame.srcdoc = html + `<script>document.addEventListener('click',e=>{const a=e.target.closest('[data-nav-to]');if(a){e.preventDefault();parent.postMessage({psbNav:a.dataset.navTo},'*')}})</script>`;
     $("#preview").hidden = false; $("#preview").scrollIntoView({ behavior: "smooth" });
