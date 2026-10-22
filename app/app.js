@@ -415,6 +415,7 @@
   });
 
   /* preview: rewrite relative asset links to blob URLs for the chosen page */
+  let lastPreviewHtml = "";
   const urlCache = new Map();
   const blobUrl = (k) => { if (!urlCache.has(k)) urlCache.set(k, URL.createObjectURL(built.blobs[k])); return urlCache.get(k); };
   function showPreview() {
@@ -425,13 +426,18 @@
       return built.blobs[asset] ? `${a}="${blobUrl(asset)}"` : m;
     });
     html = html.replace(/href="((?:\.\.\/)*)([^"#:]*\/|)"/g, (m, rel, p) => `href="#" data-nav-to="${p}index.html"`).replace("<head>", "<head><base target=\"_self\">");
+    lastPreviewHtml = html;
     const frame = $("#preview-frame"); frame.srcdoc = html + `<script>document.addEventListener('click',e=>{const a=e.target.closest('[data-nav-to]');if(a){e.preventDefault();parent.postMessage({psbNav:a.dataset.navTo},'*')}})</script>`;
     $("#preview").hidden = false; $("#preview").scrollIntoView({ behavior: "smooth" });
   }
   addEventListener("message", e => { if (e.data && e.data.psbNav && built) { const p = e.data.psbNav === "index.html" ? "index.html" : e.data.psbNav; if (built.files[p]) { $("#preview-page").value = p; showPreview(); } } });
   $("#btn-preview").addEventListener("click", showPreview);
   $("#preview-page").addEventListener("change", showPreview);
-  $("#preview-mobile").addEventListener("click", () => $("#preview").classList.toggle("is-mobile"));
+  $$(".dev").forEach(b => b.addEventListener("click", () => { $$(".dev").forEach(x => x.classList.toggle("is-on", x === b)); const pv = $("#preview"); pv.className = "preview dev-" + b.dataset.dev; }));
+  $("#preview-rotate").addEventListener("click", () => $("#preview").classList.toggle("is-rot"));
+  $("#preview-full").addEventListener("click", () => { const pv = $("#preview"); document.fullscreenElement ? document.exitFullscreen() : pv.requestFullscreen && pv.requestFullscreen(); });
+  $("#preview-tab").addEventListener("click", () => { const html = lastPreviewHtml; if (!html) return; const u = URL.createObjectURL(new Blob([html.replace(/data-nav-to="[^"]*"/g, "")], { type: "text/html" })); window.open(u, "_blank"); });
+
   $("#preview-close").addEventListener("click", () => $("#preview").hidden = true);
 
   /* ---------- GitHub publish via Git Data API ---------- */

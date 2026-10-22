@@ -334,8 +334,18 @@
       <div id="build-log" class="log" hidden></div>
 
       <div class="preview" id="preview" hidden>
-        <div class="preview-bar"><select id="preview-page"></select><button class="ghost" id="preview-mobile">Phone</button><button class="ghost" id="preview-close">Close</button></div>
-        <iframe id="preview-frame" title="Site preview"></iframe>
+        <div class="preview-bar"><select id="preview-page"></select>
+          <div class="devices" role="group" aria-label="Preview size">
+            <button class="ghost dev is-on" data-dev="desktop" title="Desktop (full width)">🖥 Desktop</button>
+            <button class="ghost dev" data-dev="laptop" title="Laptop 1280px">💻 Laptop</button>
+            <button class="ghost dev" data-dev="tablet" title="Tablet 820px">▭ Tablet</button>
+            <button class="ghost dev" data-dev="phone" title="Phone 390px">📱 Phone</button>
+          </div>
+          <button class="ghost" id="preview-rotate" title="Rotate tablet/phone">⟳</button>
+          <button class="ghost" id="preview-full">⛶ Full screen</button>
+          <button class="ghost" id="preview-tab">Open in new tab</button>
+          <button class="ghost" id="preview-close">Close</button></div>
+        <div class="preview-stage"><iframe id="preview-frame" title="Site preview"></iframe></div>
       </div>
 
       <h2>Publish to GitHub Pages</h2>
